@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Noi Due 🫶</title>
+<link rel="stylesheet" href="style.css">
+
+<!-- ══════════ FONT — modifica qui (dopo style.css così sovrascrive tutto) ══════════ -->
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet"><!-- Secondo font (opzionale, es. titoli): aggiungi un <link> qui e imposta --font-display nel blocco sotto -->
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-sans: 'Lato', system-ui, sans-serif;
+    /* Titoli: stesso del corpo, oppure es. 'Fraunces', Georgia, serif; + link Google Fonts sopra */
+    --font-display: 'Bricolage Grotesque';
+  }
+</style>
+<!-- ══════════ /FONT ═════════= -->
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-overlay" style="display:flex">
+  <div class="spinner"></div>
+  <p id="loading-msg">Connessione...</p>
+</div>
+
+<!-- ══════════ HERO PRE-SCREEN ══════════ -->
+<div id="hero-screen">
+  <div class="hero-stories" id="hero-stories"></div>
+</div>
+
+<!-- ══════════ AUTH ══════════ -->
+<div id="auth-screen" style="display:none">
+  <div class="setup-hero">
+    <span class="setup-hero-heart">🫶</span>
+    <h1>Noi Due</h1>
+    <p>Accedi per continuare</p>
+  </div>
+  <div class="setup-box">
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')">Accedi</button>
+      <button class="auth-tab" id="auth-tab-signup" onclick="switchAuthTab('signup')">Registrati</button>
+    </div>
+
+    <div class="auth-panel active" id="auth-panel-login">
+      <div class="field-group">
+        <label>Email</label>
+        <input class="field-input" type="email" id="login-email" placeholder="tu@email.com" autocomplete="email" />
+      </div>
+      <div class="field-group">
+        <label>Password</label>
+        <input class="field-input" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button class="btn-primary" onclick="doLogin()">🔓 Accedi</button>
+      <button class="btn-link" onclick="doResetPassword()" style="margin-top:10px">Hai dimenticato la password?</button>
+    </div>
+
+    <div class="auth-panel" id="auth-panel-signup">
+      <div class="field-group">
+        <label>Email</label>
+        <input class="field-input" type="email" id="signup-email" placeholder="tu@email.com" autocomplete="email" />
+      </div>
+      <div class="field-group">
+        <label>Password (min 6 caratteri)</label>
+        <input class="field-input" type="password" id="signup-password" placeholder="••••••••" autocomplete="new-password" />
+      </div>
+      <button class="btn-primary" onclick="doSignup()">✨ Crea account</button>
+    </div>
+
+    <div class="setup-err" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- ══════════ SETUP ══════════ -->
+<div id="setup-screen">
+  <div class="setup-hero">
+    <span class="setup-hero-heart">🫶</span>
+    <h1>Noi Due</h1>
+    <p>Il vostro spazio condiviso in tempo reale</p>
+  </div>
+  <div class="setup-box">
+    <h2>🆕 Prima volta? Crea il vostro spazio</h2>
+    <p class="setup-sub">Inserite i vostri nomi e create il vostro spazio condiviso — tutto in tempo reale, gratis.</p>
+    <div class="setup-names-row">
+      <div class="setup-name-field">
+        <label class="lui-lbl">💙 Nome lui</label>
+        <input class="field-input" type="text" id="name-lui" placeholder="es. Marco" maxlength="20" />
+      </div>
+      <div class="setup-name-field">
+        <label class="lei-lbl">🩷 Nome lei</label>
+        <input class="field-input" type="text" id="name-lei" placeholder="es. Sofia" maxlength="20" />
+      </div>
+    </div>
+    <button class="btn-primary" onclick="createCouple()">🚀 Crea il vostro spazio</button>
+    <div class="setup-err" id="setup-error"></div>
+    <div class="setup-divider">oppure</div>
+    <h2 style="margin-bottom:6px">🔗 Unisciti allo spazio</h2>
+    <p class="setup-sub">Hai ricevuto un link o un codice? Connettiti qui.</p>
+    <div class="field-group">
+      <label>Codice coppia</label>
+      <input class="field-input" type="text" id="join-code" placeholder="nd-abc12345" autocomplete="off" />
+    </div>
+    <div class="field-group">
+      <label>Chi sei tu?</label>
+      <div class="who-toggle" id="join-role-toggle">
+        <button class="who-btn" id="join-role-lui" onclick="setJoinRole('lui')">💙 Lui</button>
+        <button class="who-btn active-lei" id="join-role-lei" onclick="setJoinRole('lei')">🩷 Lei</button>
+      </div>
+    </div>
+    <button class="btn-secondary" onclick="joinCouple()">🔗 Connettiti</button>
+  </div>
+</div>
+
+<!-- ══════════ APP ══════════ -->
+<div id="app-screen">
+
+  <div class="mobile-overlay" id="mobile-overlay" onclick="closeSidebar()"></div>
+
+  <div class="topbar">
+    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+    <span class="topbar-title" onclick="showPage('dashboard')">Noi Due 🫶</span>
+    <div class="sync-dot" id="sync-dot-m" style="margin-right:4px"></div>
+  </div>
+
+  <div class="layout">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-logo" onclick="showPage('dashboard')" title="Home">
+        <h1>Noi Due 🫶</h1>
+        <p id="sidebar-subtitle">Il vostro spazio</p>
+      </div>
+
+      <!-- Search in sidebar -->
+      <div class="sidebar-search-wrap">
+        <input class="sidebar-search" type="text" id="global-search" placeholder="🔍 Cerca in tutto…" oninput="onSearchInput()" autocomplete="off" />
+        <button class="sidebar-search-clear" id="search-clear" onclick="clearSearch()" style="display:none">✕</button>
+      </div>
+
+      <span class="nav-label">Generale</span>
+      <div class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard"><span class="nav-icon">🏠</span> Home</div>
+      <div class="nav-item" onclick="showPage('gallery')" data-page="gallery"><span class="nav-icon">🖼️</span> Galleria <span class="nav-badge" id="nb-gallery">0</span></div>
+      <div class="nav-item" onclick="showPage('games')" data-page="games"><span class="nav-icon">🎮</span> Giochi <span class="nav-badge" id="nb-games" style="font-size:10px"></span></div>
+
+      <span class="nav-label">Posti & Viaggi</span>
+      <div class="nav-item" onclick="showPage('places')" data-page="places"><span class="nav-icon">📍</span> Posti <span class="nav-badge" id="nb-places">0</span></div>
+      <div class="nav-item" onclick="showPage('trips')" data-page="trips"><span class="nav-icon">✈️</span> Viaggi <span class="nav-badge" id="nb-trips">0</span></div>
+
+      <span class="nav-label">Cultura & Svago</span>
+      <div class="nav-item" onclick="showPage('movies')" data-page="movies"><span class="nav-icon">🎬</span> Film & Serie <span class="nav-badge" id="nb-movies">0</span></div>
+      <div class="nav-item" onclick="showPage('books')" data-page="books"><span class="nav-icon">📚</span> Libri <span class="nav-badge" id="nb-books">0</span></div>
+      <div class="nav-item" onclick="showPage('restaurants')" data-page="restaurants"><span class="nav-icon">🍽️</span> Ristoranti <span class="nav-badge" id="nb-restaurants">0</span></div>
+
+      <span class="nav-label">Vita insieme</span>
+      <div class="nav-item" onclick="showPage('projects')" data-page="projects"><span class="nav-icon">🛠️</span> Progetti <span class="nav-badge" id="nb-projects">0</span></div>
+      <div class="nav-item" onclick="showPage('dreams')" data-page="dreams"><span class="nav-icon">💭</span> Sogni <span class="nav-badge" id="nb-dreams">0</span></div>
+      <div class="nav-item" onclick="showPage('anniversaries')" data-page="anniversaries"><span class="nav-icon">🎂</span> Date importanti <span class="nav-badge" id="nb-anniversaries">0</span></div>
+
+      <span class="nav-label">Extra</span>
+      <div class="nav-item" onclick="showPage('calendar')" data-page="calendar"><span class="nav-icon">📅</span> Calendario</div>
+      <div class="nav-item" onclick="showPage('settings')" data-page="settings"><span class="nav-icon">⚙️</span> Impostazioni</div>
+
+      <div class="sidebar-bottom">
+        <div class="sync-row"><div class="sync-dot live" id="sync-dot"></div><span id="sync-label">Sincronizzato</span></div>
+        <button class="btn-logout" onclick="logout()">⚙ Cambia spazio</button>
+      </div>
+    </nav>
+
+    <main class="main">
+
+      <!-- ── DASHBOARD ── -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header">
+          <h2 id="dash-greeting">Ciao 🌙</h2>
+        </div>
+
+        <!-- Notifica sfide in attesa -->
+        <div id="games-notify"></div>
+
+        <div id="gallery-hero"></div>
+
+        <!-- Chat Widget -->
+        <div class="chat-widget" id="chat-widget">
+          <div class="chat-widget-header">
+            <span class="chat-widget-title">💬 Messaggi</span>
+            <span class="chat-widget-count" id="chat-count"></span>
+          </div>
+          <div class="chat-messages-list" id="chat-messages-list"></div>
+          <div class="chat-input-row">
+            <textarea class="chat-textarea" id="chat-input" placeholder="Scrivi un messaggio..." rows="1"
+              oninput="autoResizeChatInput(this)"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMsg()}"
+            ></textarea>
+            <button class="chat-send-btn" onclick="sendChatMsg()">➤</button>
+          </div>
+        </div>
+
+        <div class="section-label">Esplora</div>
+        <div class="section-title">Tutte le categorie</div>
+        <div class="type-grid" id="type-grid"></div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-size:15px;font-weight:700;color:var(--text)">📅 Prossimi eventi</div>
+          <button onclick="showPage('calendar')" style="background:none;border:none;color:var(--glicine);font-size:13px;font-weight:600;cursor:pointer">Tutti →</button>
+        </div>
+        <div class="upcoming-list" id="dash-upcoming"></div>
+
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:12px;">Tutti i progetti</div>
+        <div class="recent-grid" id="dash-recent"></div>
+        <div id="dash-done"></div>
+      </div>
+
+      <!-- ── GALLERIA ── -->
+      <div class="page" id="page-gallery">
+        <div class="page-header"><h2>🖼️ La Nostra Galleria</h2><p>I vostri momenti, ricordi e foto preferite</p></div>
+        <div class="add-bar">
+          <button class="btn-add" onclick="openGalleryModal()">+ Aggiungi foto</button>
+          <div class="gallery-sort-controls">
+            <select id="gallery-sort-select" class="gallery-sort-select" onchange="onGallerySortChange(this.value)">
+              <option value="postDate">Data del post</option>
+              <option value="uploadDate">Data di caricamento</option>
+            </select>
+            <button id="gallery-sort-reverse-btn" class="gallery-sort-reverse" onclick="toggleGallerySortReverse()">↕ Reverse</button>
+          </div>
+        </div>
+        <div class="gallery-grid" id="gallery-grid"></div>
+      </div>
+
+      <!-- ── GIOCHI ── -->
+      <div class="page" id="page-games">
+        <div class="page-header"><h2>🎮 Giochi</h2><p>Sfide asincrone tra voi due</p></div>
+        <div id="games-content"></div>
+      </div>
+
+      <!-- ── SEZIONI ── -->
+      <div class="page" id="page-places">
+        <div class="page-header"><h2>📍 Posti da visitare</h2><p>Città, musei, quartieri, angoli nascosti…</p></div>
+        <div class="add-bar"><button class="btn-add" onclick="openModal('places')">+ Aggiungi posto</button><div class="view-toggle"><button class="view-btn active" onclick="setView('places','grid',this)">⊞</button><button class="view-btn" onclick="setView('places','list',this)">☰</button></div></div>
+        <div id="progress-places"></div><div class="filter-bar" id="fb-places"></div><div class="cards-grid" id="list-places"></div><div id="done-list-places"></div>
+      </div>
+      <div class="page" id="page-trips">
+        <div class="page-header"><h2>✈️ Viaggi</h2><p>Destinazioni sognate, weekend, avventure…</p></div>
+        <div class="add-bar"><button class="btn-add" onclick="openModal('trips')">+ Aggiungi viaggio</button><div class="view-toggle"><button class="view-btn active" onclick="setView('trips','grid',this)">⊞</button><button class="view-btn" onclick="setView('trips','list',this)">☰</button></div></div>
+        <div id="progress-trips"></div><div class="filter-bar" id="fb-trips"></div><div class="cards-grid" id="list-trips"></div><div id="done-list-trips"></div>
+      </div>
+      <div class="page" id="page-movies">
+        <div class="page-header"><h2>🎬 Film & Serie</h2><p>La vostra watchlist di coppia</p></div>
+        <div class="add-bar"><button class="btn-add" onclick="openModal('movies')">+ Aggiungi titolo</button><div class="view-toggle"><button class="view-btn active" onclick="setView('movies','grid',this)">⊞</button><button class="view-btn" onclick="setView('movies','list',this)">☰</button></div></div>
+        <div id="progress-movies"></div><div class="filter-bar" id="fb-movies"></div><div class="cards-grid" id="list-movies"></div><div id="done-list-movies"></div>
+      </div>
+      <div class="page" id="page-books">
+        <div class="page-header"><h2>📚 Libri</h2><p>Da leggere, da regalare, da condividere</p></div>
+        <div class="add-bar"><button class="btn-add" onclick="openModal('books')">+ Aggiungi libro</button><div class="view-toggle"><button class="view-btn active" onclick="setView('books','grid',this)">⊞</button><button class="view-btn" onclick="setView('books','list',this)">☰</button></div></div>
+        <div id="progress-books"></div><div class="filter-bar" id="fb-books"></div><div class="cards-grid" id="list-books"></div><div id="done-list-books"></div>
+      </div>
+      <div class="page" id="page-restaurants">
+        <div class="page-header"><h2>🍽️ Ristoranti</h2><p>Dove mangiare, cosa provare</p></div>
+        <div class="add-bar"><button class="btn-add" onclick="openModal('restaurants')">+ Aggiungi ristorante</button><div class="view-toggle"><button class="view-btn active" onclick="setView('restaurants','grid',this)">⊞</button><button class="view-btn" onclick="setView('restaurants','list',this)">☰</button></div></div>
+        <div id="progress-restaurants"></div><div class="filter-bar" id="fb-restaurants"></div><div class="cards-grid" id="list-restaurants"></div><div id="done-list-restaurants"></div>
+      </div>
+      <div class="page" id="page-projects">
+        <div class="page-header"><h2>🛠️ Progetti</h2><p>Idee, piani, cose da fare insieme</p></div>
+        <div class="add-bar"><button class="btn-add" onclick="openModal('projects')">+ Aggiungi progetto</button><div class="view-toggle"><button class="view-btn active" onclick="setView('projects','grid',this)">⊞</button><button class="view-btn" onclick="setView('projects','list',this)">☰</button></div></div>
+        <div id="progress-projects"></div><div class="filter-bar" id="fb-projects"></div><div class="cards-grid" id="list-projects"></div><div id="done-list-projects"></div>
+      </div>
+      <div class="page" id="page-dreams">
+        <div class="page-header"><h2>💭 Sogni</h2><p>Desideri, aspirazioni, sogni nel cassetto</p></div>
+        <div class="add-bar"><button class="btn-add" onclick="openModal('dreams')">+ Aggiungi sogno</button><div class="view-toggle"><button class="view-btn active" onclick="setView('dreams','grid',this)">⊞</button><button class="view-btn" onclick="setView('dreams','list',this)">☰</button></div></div>
+        <div id="progress-dreams"></div><div class="filter-bar" id="fb-dreams"></div><div class="cards-grid" id="list-dreams"></div><div id="done-list-dreams"></div>
+      </div>
+      <div class="page" id="page-anniversaries">
+        <div class="page-header"><h2>🎂 Date importanti</h2><p>Anniversari, compleanni, momenti da ricordare</p></div>
+        <div class="add-bar"><button class="btn-add" onclick="openModal('anniversaries')">+ Aggiungi data</button></div>
+        <div class="cards-grid" id="list-anniversaries"></div>
+      </div>
+
+      <!-- ── CALENDARIO ── -->
+      <div class="page" id="page-calendar">
+        <div class="page-header"><h2>📅 Calendario</h2><p>Tutti gli eventi con una data</p></div>
+        <div id="calendar-view"></div>
+      </div>
+
+      <!-- ── IMPOSTAZIONI ── -->
+      <div class="page" id="page-settings">
+        <div class="page-header"><h2>⚙️ Impostazioni</h2><p>Condivisione, nomi, foto e backup</p></div>
+        <div class="settings-grid">
+          <div class="share-box">
+            <h3>🙋 Chi sei tu?</h3>
+            <p>Scegli il tuo ruolo. Influenza i giochi e il campo "suggerito da".</p>
+            <div class="who-toggle" id="settings-role-toggle">
+              <button class="who-btn" id="settings-role-lui" onclick="setMyRole('lui')">💙 <span id="settings-role-lbl-lui">Lui</span></button>
+              <button class="who-btn" id="settings-role-lei" onclick="setMyRole('lei')">🩷 <span id="settings-role-lbl-lei">Lei</span></button>
+            </div>
+            <div id="role-msg" style="font-size:12px;color:var(--glicine);margin-top:10px;min-height:16px;"></div>
+          </div>
+          <div class="share-box">
+            <h3>👥 Nomi</h3>
+            <p>Cambiate i nomi visualizzati nell'app.</p>
+            <div class="setup-names-row" style="margin-bottom:12px;">
+              <div class="setup-name-field">
+                <label class="lui-lbl">💙 Nome lui</label>
+                <input class="field-input" type="text" id="settings-name-lui" maxlength="20" />
+              </div>
+              <div class="setup-name-field">
+                <label class="lei-lbl">🩷 Nome lei</label>
+                <input class="field-input" type="text" id="settings-name-lei" maxlength="20" />
+              </div>
+            </div>
+            <button class="btn-submit" onclick="saveNames()" style="font-size:13px;padding:8px 18px;">Salva nomi</button>
+            <div id="names-msg" style="font-size:12px;color:var(--glicine);margin-top:8px;min-height:16px;"></div>
+          </div>
+          <div class="share-box">
+            <h3>💌 Condividi con il tuo partner</h3>
+            <p>Manda questo link — chi lo apre si connette automaticamente al vostro spazio.</p>
+            <div class="share-row">
+              <input class="share-input" id="share-link" readonly />
+              <button class="btn-copy" onclick="copyLink()">📋 Copia</button>
+            </div>
+            <div class="copy-msg" id="copy-msg"></div>
+          </div>
+          <div class="share-box">
+            <h3>🖼️ Caricamento foto — Cloudinary</h3>
+            <p>Per caricare foto serve un account gratuito su <a href="https://cloudinary.com" target="_blank">Cloudinary</a>:</p>
+            <ol style="font-size:12px;color:var(--text-soft);line-height:2.2;padding-left:18px;margin-bottom:12px;">
+              <li>Registrati su <b>cloudinary.com</b> (gratis)</li>
+              <li>Dashboard → copia il <b>Cloud name</b></li>
+              <li>Settings → Upload → <b>Add upload preset</b> → Unsigned → nome: <code style="background:var(--bg3);padding:1px 6px;border-radius:4px;color:var(--glicine)">ml_default</code></li>
+              <li>Incolla il Cloud name qui sotto e premi Salva</li>
+            </ol>
+            <div class="share-row">
+              <input class="share-input" id="cloudname-input" placeholder="es: dxy12abc3" style="font-size:13px" />
+              <button class="btn-copy" onclick="saveCloudName()">Salva</button>
+            </div>
+            <div id="cloudname-msg" style="font-size:12px;color:var(--glicine);margin-top:8px;min-height:16px;"></div>
+          </div>
+          <div class="share-box">
+            <h3>💾 Backup dati</h3>
+            <p>Scarica una copia locale di tutti i tuoi dati Firebase in formato JSON.</p>
+            <button class="btn-add" onclick="exportBackup()" style="margin-top:4px;font-size:13px;">💾 Scarica backup</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- Search results overlay -->
+<div id="search-results" class="search-results"></div>
+
+<!-- ══════════ QUICK REACT BAR ══════════ -->
+<div id="quick-react-backdrop" onclick="closeQuickReact()"></div>
+<div id="quick-react-bar"></div>
+
+<!-- ══════════ EMOJI PICKER (full) ══════════ -->
+<div class="emoji-picker-backdrop" id="emoji-picker-backdrop" onclick="closeEmojiPicker()"></div>
+<div class="emoji-picker" id="emoji-picker">
+  <div class="emoji-picker-handle"></div>
+  <div class="emoji-picker-head">
+    <span class="emoji-picker-label">Reaction</span>
+    <button class="emoji-picker-close" onclick="closeEmojiPicker()">✕</button>
+  </div>
+  <div class="emoji-picker-search-wrap">
+    <input class="emoji-picker-search" type="text" id="emoji-search" placeholder="Cerca emoji..." oninput="filterEmojis(this.value)" />
+  </div>
+  <div class="emoji-picker-cats" id="emoji-picker-cats"></div>
+  <div class="emoji-picker-grid" id="emoji-picker-grid"></div>
+</div>
+
+<!-- ══════════ GALLERY MODAL ══════════ -->
+<div class="modal-overlay" id="gallery-modal-overlay" onclick="if(event.target===this)closeGalleryModal()">
+  <div class="modal">
+    <h3 id="gallery-modal-title">📸 Aggiungi foto</h3>
+    <div class="form-row"><label>Titolo *</label><input type="text" id="gf-title" placeholder="Un momento speciale..." /></div>
+    <div class="form-row"><label>Didascalia / Storia</label><textarea id="gf-caption" placeholder="Racconta questo momento..."></textarea></div>
+    <div class="form-row"><label>Data</label><input type="date" id="gf-date" /></div>
+    <div class="form-row"><label>Luogo</label><input type="text" id="gf-location" placeholder="Roma, Trastevere..." /></div>
+    <div class="form-row">
+      <label>Foto</label>
+      <div class="img-tabs">
+        <button class="img-tab active" id="gimgtab-url" onclick="switchGImgTab('url')">🔗 URL</button>
+        <button class="img-tab" id="gimgtab-file" onclick="switchGImgTab('file')">📁 Carica file</button>
+      </div>
+      <div class="img-panel active" id="gimg-panel-url">
+        <input type="url" id="gf-img" placeholder="https://..." style="border:1px solid var(--border);border-radius:var(--r-md);padding:9px 13px;font-family:var(--font-sans);font-size:14px;color:var(--text);outline:none;background:var(--bg3);width:100%;" oninput="onGImgUrlInput()" />
+      </div>
+      <div class="img-panel" id="gimg-panel-file">
+        <label class="img-file-label">
+          <span>📷</span>
+          <span id="gimg-file-label-text">Clicca per scegliere un'immagine</span>
+          <input type="file" id="gf-img-file" accept="image/*" onchange="handleImgFile(event,'gallery')" />
+        </label>
+        <img id="gf-img-preview" class="img-file-preview" alt="" />
+        <div id="gimg-upload-status" style="font-size:12px;color:var(--text-dim);margin-top:6px;min-height:16px;"></div>
+      </div>
+      <div class="focal-picker-wrap" id="focal-picker-wrap">
+        <img class="focal-picker-img" id="focal-picker-img" alt="" draggable="false" />
+        <div class="focal-crosshair" id="focal-crosshair"></div>
+      </div>
+      <div class="focal-hint" id="focal-hint" style="display:none">🎯 Clicca per scegliere il punto focale nella hero</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeGalleryModal()">Annulla</button>
+      <button class="btn-submit" onclick="saveGalleryItem()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ GALLERY FULLSCREEN ══════════ -->
+<div class="gallery-fs-overlay" id="gallery-fs-overlay" onclick="if(event.target===this)closeGalleryFS()">
+  <button class="gallery-fs-arrow gallery-fs-prev" id="gfs-prev" onclick="navigateGFS(-1)">‹</button>
+  <button class="gallery-fs-arrow gallery-fs-next" id="gfs-next" onclick="navigateGFS(1)">›</button>
+  <div class="gallery-fs-inner">
+    <button class="gallery-fs-close" onclick="closeGalleryFS()">✕</button>
+    <img id="gfs-img" class="gallery-fs-img" alt="" />
+    <div id="gfs-no-img" class="gallery-fs-no-img" style="display:none">🖼️</div>
+    <div class="gallery-fs-info">
+      <div class="gallery-fs-title" id="gfs-title"></div>
+      <div class="gallery-fs-caption" id="gfs-caption"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px" id="gfs-meta"></div>
+      <div id="gfs-reactions" class="gfs-reactions"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DETAIL MODAL ══════════ -->
+<div class="detail-modal-overlay" id="detail-modal-overlay" onclick="if(event.target===this)closeDetail()">
+  <div class="detail-modal">
+    <div id="detail-modal-media"></div>
+    <div class="detail-modal-body">
+      <div class="detail-modal-header">
+        <div class="detail-modal-title" id="detail-modal-title"></div>
+        <button class="detail-modal-close" onclick="closeDetail()">✕</button>
+      </div>
+      <div id="detail-modal-location" class="detail-modal-location" style="display:none"></div>
+      <div class="detail-modal-note" id="detail-modal-note" style="display:none"></div>
+      <div class="detail-modal-meta" id="detail-modal-meta"></div>
+      <div class="detail-modal-actions">
+        <button class="btn-ghost" onclick="closeDetail()">Chiudi</button>
+        <button class="btn-submit" id="detail-edit-btn">✏️ Modifica</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MODAL ADD/EDIT ══════════ -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h3 id="modal-title">Aggiungi</h3>
+    <div class="form-row"><label>Titolo *</label><input type="text" id="f-title" placeholder="Nome..." /></div>
+    <div class="form-row"><label>Note</label><textarea id="f-note" placeholder="Descrizione, commenti..."></textarea></div>
+    <div class="form-row">
+      <label>Suggerito da</label>
+      <div class="who-toggle">
+        <button class="who-btn" id="who-lui" onclick="setWho('lui')">💙 <span id="who-lbl-lui">Lui</span></button>
+        <button class="who-btn" id="who-lei" onclick="setWho('lei')">🩷 <span id="who-lbl-lei">Lei</span></button>
+      </div>
+    </div>
+    <div class="form-row" id="f-cat-row"><label>Categoria</label><div class="cats-row" id="f-cats"></div></div>
+    <div class="form-row"><label>Data (opzionale)</label><input type="date" id="f-date" /></div>
+    <div class="form-row"><label>Link (sito, trailer…)</label><input type="url" id="f-link" placeholder="https://..." /></div>
+    <div class="form-row">
+      <label>Immagine</label>
+      <div class="img-tabs">
+        <button class="img-tab active" id="img-tab-url" onclick="switchImgTab('url')">🔗 URL</button>
+        <button class="img-tab" id="img-tab-file" onclick="switchImgTab('file')">📁 Carica file</button>
+      </div>
+      <div class="img-panel active" id="img-panel-url">
+        <input type="url" id="f-img" placeholder="https://... (link immagine)" style="border:1px solid var(--border);border-radius:var(--r-md);padding:9px 13px;font-family:var(--font-sans);font-size:14px;color:var(--text);outline:none;background:var(--bg3);width:100%;" />
+      </div>
+      <div class="img-panel" id="img-panel-file">
+        <label class="img-file-label" id="img-file-label-btn">
+          <span>📷</span>
+          <span id="img-file-label-text">Clicca per scegliere un'immagine</span>
+          <input type="file" id="f-img-file" accept="image/*" onchange="handleImgFile(event,'item')" />
+        </label>
+        <img id="f-img-preview" class="img-file-preview" alt="" />
+        <div id="img-upload-status" style="font-size:12px;color:var(--text-dim);margin-top:6px;min-height:16px;"></div>
+      </div>
+    </div>
+    <div class="form-row" id="f-map-row"><label>Indirizzo / Google Maps</label><input type="text" id="f-map" placeholder="Via Roma 1, Milano..." /></div>
+    <div class="form-row" id="f-rating-row">
+      <label>Voto (dopo averlo fatto)</label>
+      <div class="stars-row" id="f-stars">
+        <button class="star-btn" data-v="1" onclick="setStar(1)">⭐</button>
+        <button class="star-btn" data-v="2" onclick="setStar(2)">⭐</button>
+        <button class="star-btn" data-v="3" onclick="setStar(3)">⭐</button>
+        <button class="star-btn" data-v="4" onclick="setStar(4)">⭐</button>
+        <button class="star-btn" data-v="5" onclick="setStar(5)">⭐</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Annulla</button>
+      <button class="btn-submit" onclick="saveItem()">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ TRIVIA CREATE MODAL ══════════ -->
+<div class="game-modal-overlay" id="trivia-modal-overlay" onclick="if(event.target===this)closeTriviaModal()">
+  <div class="game-modal">
+    <h3>🧠 Crea sfida Trivia</h3>
+    <div class="form-row">
+      <label>La domanda *</label>
+      <textarea id="trivia-question" placeholder="Qual è il mio film preferito?" style="border:1px solid var(--border);border-radius:var(--r-md);padding:9px 13px;font-family:var(--font-sans);font-size:14px;color:var(--text);outline:none;background:var(--bg3);width:100%;resize:vertical;min-height:70px;line-height:1.5;"></textarea>
+    </div>
+    <div class="form-row">
+      <label>Opzioni di risposta — seleziona quella corretta</label>
+      <div class="trivia-opt-inputs">
+        <div class="trivia-opt-row">
+          <input type="radio" name="trivia-correct" class="trivia-opt-radio" value="0" id="tc0" checked />
+          <input class="trivia-opt-input" type="text" id="t-opt0" placeholder="Opzione A" />
+        </div>
+        <div class="trivia-opt-row">
+          <input type="radio" name="trivia-correct" class="trivia-opt-radio" value="1" id="tc1" />
+          <input class="trivia-opt-input" type="text" id="t-opt1" placeholder="Opzione B" />
+        </div>
+        <div class="trivia-opt-row">
+          <input type="radio" name="trivia-correct" class="trivia-opt-radio" value="2" id="tc2" />
+          <input class="trivia-opt-input" type="text" id="t-opt2" placeholder="Opzione C" />
+        </div>
+        <div class="trivia-opt-row">
+          <input type="radio" name="trivia-correct" class="trivia-opt-radio" value="3" id="tc3" />
+          <input class="trivia-opt-input" type="text" id="t-opt3" placeholder="Opzione D" />
+        </div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;">Il cerchio alla sinistra di ogni opzione indica la risposta corretta. Selezionane una.</div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeTriviaModal()">Annulla</button>
+      <button class="btn-submit" onclick="submitTrivia()">Invia sfida</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ PICTIONARY DRAW MODAL ══════════ -->
+<div class="game-modal-overlay" id="pic-draw-modal-overlay" onclick="if(event.target===this)closePicDrawModal()">
+  <div class="game-modal" style="max-width:580px">
+    <h3>🎨 Disegna!</h3>
+    <div class="pic-word-badge" id="pic-draw-word"></div>
+    <div class="pic-word-hint">Disegna la parola — non scriverla! L'altro dovrà indovinarla.</div>
+    <div class="draw-toolbar" id="draw-toolbar"></div>
+    <canvas id="draw-canvas" class="draw-canvas" width="520" height="320"></canvas>
+    <div class="draw-actions">
+      <button class="draw-action-btn" onclick="clearCanvas()">🗑️ Cancella tutto</button>
+      <button class="draw-action-btn" onclick="undoCanvas()">↩️ Annulla</button>
+      <button class="draw-action-btn primary" onclick="submitDrawing()">✓ Invia disegno</button>
+    </div>
+    <div id="pic-draw-status" style="font-size:12px;color:var(--text-dim);margin-top:8px;min-height:16px;text-align:center"></div>
+  </div>
+</div>
+
+<!-- ══════════ VERO O FALSO CREATE MODAL ══════════ -->
+<div class="game-modal-overlay" id="vf-modal-overlay" onclick="if(event.target===this)closeVeroFalsoModal()">
+  <div class="game-modal">
+    <h3>❓ Crea sfida Vero o Falso</h3>
+    <div class="field-group">
+      <label>La tua affermazione *</label>
+      <textarea id="vf-statement" placeholder="es. Non ho mai visto Titanic" style="border:1px solid var(--border);border-radius:var(--r-md);padding:9px 13px;font-family:var(--font-sans);font-size:14px;color:var(--text);outline:none;background:var(--bg3);width:100%;resize:vertical;min-height:70px;line-height:1.5;"></textarea>
+    </div>
+    <div class="field-group">
+      <label>La risposta vera è…</label>
+      <div class="vf-answer-pick" id="vf-answer-pick">
+        <button class="vf-pick-btn active" id="vf-pick-true" onclick="setVfAnswer(true)">✅ Vero</button>
+        <button class="vf-pick-btn" id="vf-pick-false" onclick="setVfAnswer(false)">❌ Falso</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeVeroFalsoModal()">Annulla</button>
+      <button class="btn-submit" onclick="submitVeroFalso()">Invia sfida</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="games.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

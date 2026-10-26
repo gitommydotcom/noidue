@@ -2,7 +2,7 @@
    NOI DUE — tela da disegno (Pictionary e bigliettini)
 ═══════════════════════════════════════════════ */
 class Sketch {
-  constructor(canvas, { bg = '#ffffff', color = '#2b1d14', size = 6 } = {}) {
+  constructor(canvas, { bg = '#ffffff', color = '#2a2340', size = 6 } = {}) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.bg = bg; this.color = color; this.size = size;
@@ -120,7 +120,7 @@ class Sketch {
   }
 }
 
-const INK_COLORS = ['#2b1d14', '#9b3a35', '#e8956b', '#d8b47c', '#6f8f63', '#5d7f99', '#8a6bb0', '#ffffff'];
+const INK_COLORS = ['#2a2340', '#6d4fa3', '#b39ddb', '#e0607e', '#ecc978', '#5f9b7a', '#5d8fbf', '#ffffff'];
 
 function sketchToolbarHtml(id) {
   return `<div class="sketch-tools" id="st-${id}">

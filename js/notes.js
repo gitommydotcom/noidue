@@ -7,14 +7,15 @@
 ═══════════════════════════════════════════════ */
 
 const PAPERS = {
+  lilla:  { bg:'#e6def4', ink:'#2e2645', name:'Glicine' },
   carta:  { bg:'#f3e9d8', ink:'#3b2a1e', name:'Carta' },
   rosa:   { bg:'#f2d4cb', ink:'#4a231f', name:'Rosa' },
   burro:  { bg:'#f3e2b3', ink:'#3d2f12', name:'Burro' },
   salvia: { bg:'#d9dfca', ink:'#2e3524', name:'Salvia' },
   cielo:  { bg:'#d4dde6', ink:'#22303c', name:'Cielo' },
-  notte:  { bg:'#2a2320', ink:'#f3e9d8', name:'Notte' },
+  notte:  { bg:'#262035', ink:'#ece6f6', name:'Notte' },
 };
-const paperOf = n => PAPERS[n && n.paper] || PAPERS.carta;
+const paperOf = n => PAPERS[n && n.paper] || PAPERS.carta; // i bigliettini senza carta restano color carta
 const paperStyle = n => { const p = paperOf(n); return `--paper:${p.bg};--ink:${p.ink}`; };
 
 let notesFilter = 'all';
@@ -46,7 +47,7 @@ function renderBigliettini() {
 
   h += `<button class="compose-cta" onclick="openCompose()">
     <span class="cta-papers">
-      <i style="--paper:${PAPERS.rosa.bg}"></i><i style="--paper:${PAPERS.carta.bg}"></i><i style="--paper:${PAPERS.cielo.bg}"></i>
+      <i style="--paper:${PAPERS.rosa.bg}"></i><i style="--paper:${PAPERS.cielo.bg}"></i><i style="--paper:${PAPERS.lilla.bg}"></i>
     </span>
     <span class="cta-text"><b>Scrivi a ${esc(other)}</b><small>Arriverà come una busta da aprire</small></span>
     ${icon('arrowR', 20, 'chev')}
@@ -204,7 +205,7 @@ function openNote(id, opts = {}) {
    SCRIVI
 ═══════════════════════════════════════════════ */
 function openCompose(kind = 'text') {
-  let paper = 'carta';
+  let paper = 'lilla';
   let sketch = null;
   const tomorrow = todayKey(new Date(Date.now() + 86400000));
   const html = `<form class="compose" id="compose" novalidate>

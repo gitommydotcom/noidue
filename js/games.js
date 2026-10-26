@@ -213,7 +213,7 @@ function openPictionaryCreate() {
     <div class="row-actions sticky"><button type="button" class="btn btn-ghost" onclick="closeTop()">Annulla</button><button type="button" class="btn btn-primary" data-act="send">Invia disegno</button></div>
   </div>`, { cls:'sheet-form', onClose: () => sketch && sketch.destroy() });
   requestAnimationFrame(() => requestAnimationFrame(() => {
-    sketch = new Sketch(el.querySelector('.pic-canvas'), { bg:'#ffffff', color:'#2b1d14', size:6 });
+    sketch = new Sketch(el.querySelector('.pic-canvas'), { bg:'#ffffff', color:'#2a2340', size:6 });
     bindSketchToolbar(el, 'pic', sketch);
   }));
   el.querySelector('[data-act=reroll]').addEventListener('click', () => {

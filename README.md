@@ -48,6 +48,7 @@ js/home.js            Oggi
 js/lists.js           Insieme (tutte le liste)
 js/gallery.js         Ricordi, viewer, "Rivivi"
 js/notes.js           Bigliettini e archivio chat
+js/song.js            canzoni nei bigliettini: ricerca (catalogo iTunes), anteprima, link a Spotify/YouTube/Apple Music
 js/questions.js       Domande (domanda del giorno) e archivio delle vecchie sfide
 js/calendar.js        Calendario
 js/settings.js        Impostazioni

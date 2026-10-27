@@ -564,24 +564,6 @@ function getPhotoValue(root, id) {
   return { url: box.dataset.url || '', focal: box._focal || null, busy: box.classList.contains('busy') };
 }
 
-/* Link Spotify / YouTube → anteprima */
-function mediaPreview(url) {
-  if (!url) return '';
-  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/|music\.youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/);
-  if (yt) {
-    return `<a href="${esc(url)}" target="_blank" rel="noopener" class="media-yt">
-      <img src="https://img.youtube.com/vi/${yt[1]}/hqdefault.jpg" alt="">
-      <span class="media-play">${icon('play', 22)}</span></a>`;
-  }
-  const sp = url.match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?(track|playlist|album|episode|show)\/([A-Za-z0-9]+)/);
-  if (sp) {
-    const h = sp[1] === 'track' || sp[1] === 'episode' ? 80 : 152;
-    return `<div class="media-sp"><iframe src="https://open.spotify.com/embed/${sp[1]}/${sp[2]}?utm_source=generator&theme=0" width="100%" height="${h}" frameborder="0" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe></div>`;
-  }
-  let domain = ''; try { domain = new URL(url).hostname.replace(/^www\./, ''); } catch (e) {}
-  return `<a href="${esc(url)}" target="_blank" rel="noopener" class="media-link">${icon('link', 16)} ${esc(domain || url)}</a>`;
-}
-
 function linkify(text) {
   return String(text || '').split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
     i % 2 === 1 ? `<a href="${esc(part)}" target="_blank" rel="noopener">${esc(part)}</a>` : esc(part)

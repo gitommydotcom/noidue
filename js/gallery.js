@@ -363,8 +363,8 @@ function playStories(items) {
     ${slides.map((s, i) => {
       const g = s.g, t = s.t;
       return `<section class="story" data-i="${i}">
+        <img class="story-bg" src="${esc(cimg(g.img, 400))}" alt="">
         <div class="story-photo"><img src="${esc(cimg(g.img, 1600))}" alt="" style="${g.heroFocus ? `object-position:${g.heroFocus.x}% ${g.heroFocus.y}%` : ''}"></div>
-        <div class="story-shade"></div>
         <div class="story-text">
           ${t.when ? `<span class="glass-chip">${icon('clock', 13)} ${t.when}</span>` : ''}
           <div class="story-phrase">${t.title}</div>

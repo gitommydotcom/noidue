@@ -108,13 +108,9 @@ function renderOggi() {
     const g = m.g;
     const pos = g.heroFocus ? `object-position:${g.heroFocus.x}% ${g.heroFocus.y}%` : '';
     parts.push(`<article class="motd" onclick="openPhoto('${jsq(g.id)}')">
-      <img src="${esc(cimg(g.img, 1400))}" alt="" style="${pos}" loading="eager">
-      <div class="motd-shade"></div>
-      <div class="motd-top">
-        <span class="glass-chip">Ricordo del giorno</span>
-        ${m.t.when ? `<span class="glass-chip soft">${m.t.when}</span>` : ''}
-      </div>
-      <div class="motd-bottom">
+      <div class="motd-photo"><img src="${esc(cimg(g.img, 1400))}" alt="" style="${pos}" loading="eager"></div>
+      <div class="motd-body">
+        <div class="eyebrow">Ricordo del giorno${m.t.when ? ` · <span class="accent">${m.t.when}</span>` : ''}</div>
         <div class="motd-phrase">${m.t.title}</div>
         ${m.t.caption ? `<div class="motd-caption">${esc(m.t.caption)}</div>` : ''}
         ${m.t.meta ? `<div class="motd-meta">${m.t.meta}</div>` : ''}
@@ -123,7 +119,7 @@ function renderOggi() {
     </article>`);
   } else {
     parts.push(`<article class="motd motd-empty" onclick="openGalleryForm()">
-      <div class="motd-bottom">
+      <div class="motd-body">
         <div class="eyebrow">Ricordi</div>
         <div class="motd-phrase">Il vostro <em>primo</em><br>ricordo vi aspetta.</div>
         <span class="btn btn-cream sm">${icon('plus', 16)} Aggiungi una foto</span>
@@ -137,17 +133,18 @@ function renderOggi() {
     const first = up[0];
     const fi = first.i, fs = first.s;
     const yrs = yearsSince(fs, fi);
-    const bg = fi.img ? `<img src="${esc(cimg(fi.img, 1000))}" alt="" loading="lazy">` : '';
     const nextD = nextOccurrenceDate(fs, fi);
     parts.push(`<section class="block">
       <div class="block-head"><h2 class="h2">In arrivo</h2><button class="link-btn" onclick="go('calendario')">Calendario ${icon('arrowR', 15)}</button></div>
       <article class="next-card ${fi.img ? 'has-img' : 'sec-' + fs}" onclick="openItem('${fs}','${jsq(fi.id)}')">
-        ${bg}<div class="next-shade"></div>
-        <div class="next-d">${dBadge(first.days)}</div>
+        ${fi.img ? `<div class="next-photo"><img src="${esc(cimg(fi.img, 1000))}" alt="" loading="lazy"></div>` : ''}
         <div class="next-body">
-          <span class="glass-chip">${secIcon(fs, 14)} ${itemCats(fi)[0] ? esc(catLabel(itemCats(fi)[0])) : SECTIONS[fs].label}</span>
-          <h3 class="next-title">${esc(fi.title)}</h3>
-          <span class="next-date">${cap(nextD.toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' }))}${yrs ? ` · ${yrs} ${yrs === 1 ? 'anno' : 'anni'}` : ''}</span>
+          <div class="next-main">
+            <span class="next-kicker">${secIcon(fs, 13)} ${itemCats(fi)[0] ? esc(catLabel(itemCats(fi)[0])) : SECTIONS[fs].label}</span>
+            <h3 class="next-title">${esc(fi.title)}</h3>
+            <span class="next-date">${cap(nextD.toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' }))}${yrs ? ` · ${yrs} ${yrs === 1 ? 'anno' : 'anni'}` : ''}</span>
+          </div>
+          <div class="next-d">${dBadge(first.days)}</div>
         </div>
       </article>
       ${up.slice(1, 4).map(e => `<button class="row-card" onclick="openItem('${e.s}','${jsq(e.i.id)}')">
@@ -192,9 +189,9 @@ function renderOggi() {
     parts.push(`<section class="block">
       <div class="block-head"><h2 class="h2">Ultimi ricordi</h2><button class="link-btn" onclick="go('ricordi')">Tutti ${icon('arrowR', 15)}</button></div>
       <div class="strip">${recent.map(g => `<button class="strip-item" onclick="openPhoto('${jsq(g.id)}')">
-          <img src="${esc(cimg(g.img, 500))}" alt="" loading="lazy" style="${g.heroFocus ? `object-position:${g.heroFocus.x}% ${g.heroFocus.y}%` : ''}">
-          <span>${esc(g.title || '')}</span></button>`).join('')}
-        <button class="strip-item add" onclick="openGalleryForm()">${icon('plus', 26)}<span>Aggiungi</span></button>
+          <span class="strip-ph"><img src="${esc(cimg(g.img, 500))}" alt="" loading="lazy" style="${g.heroFocus ? `object-position:${g.heroFocus.x}% ${g.heroFocus.y}%` : ''}"></span>
+          <span class="strip-cap">${esc(g.title || g.location || (g.date ? fmtDate(g.date) : ''))}</span></button>`).join('')}
+        <button class="strip-item add" onclick="openGalleryForm()"><span class="strip-ph">${icon('plus', 26)}<small>Aggiungi</small></span></button>
       </div>
     </section>`);
   }

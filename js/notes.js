@@ -101,10 +101,7 @@ function noteContentHtml(n, full) {
   let c = '';
   if (n.kind === 'photo' && n.img) c += `<div class="note-photo"><img src="${esc(cimg(n.img, full ? 1400 : 600))}" alt="" loading="lazy"></div>`;
   if (n.kind === 'doodle' && n.drawing) c += `<img class="note-doodle" src="${n.drawing.startsWith('data:image/') ? n.drawing : ''}" alt="disegno">`;
-  if (n.kind === 'song' && n.link) {
-    c += full ? `<div class="note-song">${mediaPreview(n.link)}</div>`
-              : `<div class="note-song-mini">${icon('music', 18)}<span>Una canzone per te</span></div>`;
-  }
+  if (n.kind === 'song' && (n.link || n.song)) c += full ? `<div class="note-song">${songCardHtml(n)}</div>` : songMiniHtml(n);
   if (n.text) c += `<p class="hand">${full ? linkify(n.text) : esc(n.text)}</p>`;
   return c;
 }
@@ -181,7 +178,18 @@ function openNote(id, opts = {}) {
           : `<button class="btn btn-cream" data-act="reply">${icon('pen', 18)} Rispondi</button>`}
       </div>
     </div>
-  </div>`, { cls:'note-layer', replace: opts.replace });
+  </div>`, { cls:'note-layer', replace: opts.replace, onClose: stopSong });
+  bindSongPlayers(el);
+  // bigliettini con solo il link (fatti prima): provo a recuperare titolo, copertina e anteprima
+  if (n.kind === 'song' && n.link && !(n.song && n.song.title)) {
+    lookupSongByLink(n.link).then(meta => {
+      if (!meta || !meta.title) return;
+      n.song = meta;
+      const box = el.querySelector('.note-song');
+      if (box && el.isConnected) { box.innerHTML = songCardHtml(n); bindSongPlayers(box); }
+      updateNote(id, { song: meta }).catch(() => {});
+    }).catch(() => {});
+  }
 
   el.querySelector('[data-act=close]').addEventListener('click', closeTop);
   const bindRx = () => el.querySelectorAll('[data-rx] [data-emoji]').forEach(b => b.addEventListener('click', async () => {
@@ -220,10 +228,7 @@ function openCompose(kind = 'text') {
     <div class="compose-paper" style="--paper:${PAPERS[paper].bg};--ink:${PAPERS[paper].ink}">
       <div data-panel="photo" hidden>${photoFieldHtml('note', '', { label:'Scegli una foto' })}</div>
       <div data-panel="doodle" hidden><canvas class="doodle-canvas"></canvas></div>
-      <div data-panel="song" hidden>
-        <input class="input song-input" type="url" name="link" placeholder="Incolla un link di Spotify o YouTube">
-        <div class="song-preview"></div>
-      </div>
+      <div data-panel="song" hidden>${songPickerHtml()}</div>
       <textarea class="hand" name="text" rows="4" maxlength="1200" placeholder="Scrivi qui…"></textarea>
       <div class="compose-sign">— ${esc(meName())}</div>
     </div>
@@ -239,7 +244,7 @@ function openCompose(kind = 'text') {
     </div>
   </form>`;
 
-  const el = openSheet(html, { cls:'sheet-form sheet-compose', onClose: () => sketch && sketch.destroy() });
+  const el = openSheet(html, { cls:'sheet-form sheet-compose', onClose: () => { stopSong(); if (sketch) sketch.destroy(); } });
   const form = el.querySelector('#compose');
   const paperBox = form.querySelector('.compose-paper');
   bindPhotoField(el, 'note');
@@ -269,11 +274,7 @@ function openCompose(kind = 'text') {
     paperBox.style.setProperty('--paper', PAPERS[paper].bg);
     paperBox.style.setProperty('--ink', PAPERS[paper].ink);
   }));
-  const songIn = form.querySelector('.song-input');
-  songIn.addEventListener('input', () => {
-    const v = songIn.value.trim();
-    form.querySelector('.song-preview').innerHTML = /^https?:\/\//.test(v) ? mediaPreview(v) : '';
-  });
+  const getSong = bindSongPicker(form);
   setKind(kind);
   if (kind === 'text') setTimeout(() => form.text.focus(), 380);
 
@@ -293,9 +294,10 @@ function openCompose(kind = 'text') {
       note.drawing = sketch.toDataURL(0.75, 900, PAPERS[paper].bg);
     }
     if (kind === 'song') {
-      const link = songIn.value.trim();
-      if (!/^https?:\/\//.test(link)) { toast('Incolla il link della canzone'); songIn.focus(); return; }
-      note.link = link;
+      const pick = getSong();
+      if (!pick) { toast('Cerca una canzone e sceglila dalla lista, oppure incolla un link'); form.link.focus(); return; }
+      note.link = pick.link || '';
+      if (pick.song) note.song = pick.song;
     }
     if (form.lock.checked && form.unlockAt.value && form.unlockAt.value > todayKey()) note.unlockAt = form.unlockAt.value;
 

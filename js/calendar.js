@@ -32,12 +32,12 @@ function eventsInMonth(y, m) {
 function calRow(e) {
   if (e.s === '_gallery') {
     return `<button class="row-card" onclick="openPhoto('${jsq(e.i.id)}')">
-      ${e.i.img ? `<img class="row-thumb" src="${esc(cimg(e.i.img, 160))}" alt="">` : `<span class="row-ic emoji">🖼️</span>`}
+      ${e.i.img ? `<img class="row-thumb" src="${esc(cimg(e.i.img, 160))}" alt="">` : `<span class="row-ic">${icon('photo', 20)}</span>`}
       <span class="row-text"><b>${esc(e.i.title || 'Ricordo')}</b><small>Ricordo${e.i.location ? ' · ' + esc(e.i.location) : ''}</small></span></button>`;
   }
   const S = SECTIONS[e.s];
   return `<button class="row-card" onclick="openItem('${e.s}','${jsq(e.i.id)}')">
-    <span class="row-ic emoji">${S.icon}</span>
+    <span class="row-ic">${icon(S.icon, 20)}</span>
     <span class="row-text"><b>${esc(e.i.title)}</b><small>${S.label}${S.recurring ? ' · ogni anno' : ''}${e.i.done ? ' · fatto' : ''}</small></span>
     ${e.days !== undefined ? `<span class="d-pill">${e.days === 0 ? 'Oggi' : e.days > 0 ? `D-${e.days}` : `${-e.days}g fa`}</span>` : ''}
   </button>`;

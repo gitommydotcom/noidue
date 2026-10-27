@@ -10,7 +10,6 @@ try {
   if (p) { gallerySortBy = p.sortBy === 'uploadDate' ? 'uploadDate' : 'postDate'; gallerySortReverse = !!p.reverse; }
 } catch (e) {}
 
-const QUICK_REACTIONS = ['❤️', '😍', '🥹', '😂', '🔥', '😘'];
 
 function galleryTime(g, mode = gallerySortBy) {
   if (mode === 'postDate' && g.date) { const d = parseLocalDate(g.date); if (d) return d.getTime(); }
@@ -27,12 +26,6 @@ function sortedGallery() {
 
 function findPhoto(id) { return (data._gallery || []).find(g => sameId(g.id, id)); }
 
-function buildLocMap(gallery) {
-  const m = {};
-  gallery.forEach(g => { if (g.location) { const k = g.location.trim(); (m[k] = m[k] || []).push(g); } });
-  return m;
-}
-
 /* Visualizzazioni (solo su questo dispositivo) per variare i ricordi proposti */
 function bumpViewLocal(id) {
   if (!id || !COUPLE_ID) return;
@@ -48,53 +41,35 @@ function getViewLocal(id) {
 }
 
 /* ═══════════════════════════════════════════════
-   FRASI DEI RICORDI
+   TESTI DEI RICORDI — solo le vostre parole
+   Il titolo è sempre quello che avete scritto voi; se manca,
+   il luogo o la data. Nessuna frase inventata.
 ═══════════════════════════════════════════════ */
-function buildPhotoStory(g, ctx) {
-  const rand = ctx.rand || Math.random;
-  const pick = arr => arr[Math.floor(rand() * arr.length)];
-  const today = ctx.today || todayStart();
-  const locCount = g.location ? (ctx.locMap[g.location.trim()] || []).length : 0;
-  const photoDate = parseLocalDate(g.date);
-  const isSameDay = photoDate && photoDate.getMonth() === today.getMonth() && photoDate.getDate() === today.getDate() && photoDate.getFullYear() < today.getFullYear();
-  const yearsAgo = isSameDay ? today.getFullYear() - photoDate.getFullYear() : null;
-  const c = [];
+function photoWhen(g, today = todayStart()) {
+  const d = parseLocalDate(g.date);
+  if (!d) return '';
+  if (d.getMonth() === today.getMonth() && d.getDate() === today.getDate() && d.getFullYear() < today.getFullYear()) {
+    const y = today.getFullYear() - d.getFullYear();
+    return `Oggi, ${y === 1 ? 'un anno fa' : `${y} anni fa`}`;
+  }
+  const diff = Math.floor((today - d) / 86400000);
+  if (diff < 0) return '';
+  if (diff === 0) return 'Oggi';
+  if (diff === 1) return 'Ieri';
+  if (diff < 30) return `${diff} giorni fa`;
+  if (diff < 365) { const m = Math.floor(diff / 30); return m === 1 ? 'Un mese fa' : `${m} mesi fa`; }
+  const y = Math.floor(diff / 365);
+  const more = diff - y * 365 > 45 ? 'Più di ' : '';
+  return more + (y === 1 ? (more ? 'un anno fa' : 'Un anno fa') : `${y} anni fa`);
+}
 
-  if (yearsAgo) {
-    const y = yearsAgo === 1 ? 'un anno fa' : `${yearsAgo} anni fa`;
-    c.push({ p:100, reason: pick([`Oggi, ${y}`, `Esattamente ${y}`, 'Stesso giorno']), phrase: pick([`<em>${y}</em>,<br>oggi.`, `stesso giorno,<br><em>${y}</em>.`, `era proprio<br><em>${y}</em>.`]) });
-  }
-  if (g.location) {
-    const L = esc(g.location.trim());
-    if (locCount >= 4) c.push({ p:70, reason: pick(['Il vostro posto', 'Coordinate del cuore']), phrase: pick([`siete tornati a <em>${L}</em><br><em>${locCount} volte</em>.`, `<em>${L}</em>:<br>il vostro rifugio.`]) });
-    else if (locCount >= 2) c.push({ p:60, reason: pick([L, 'Stesso posto']), phrase: pick([`<em>${L}</em>,<br>di nuovo.`, `un altro momento<br>a <em>${L}</em>.`]) });
-    else c.push({ p:50, reason: L, phrase: pick([`un attimo<br>a <em>${L}</em>.`, `<em>${L}</em>,<br>quel giorno.`, `eravate a<br><em>${L}</em>.`]) });
-  }
-  if (!ctx.stable) {
-    const v = getViewLocal(g.id);
-    const since = v && v.ts ? Math.floor((Date.now() - v.ts) / 86400000) : null;
-    if (since !== null && since > 30) c.push({ p:65, reason:'Ricordo dimenticato', phrase: pick([`Non la guardavi<br>da <em>${since} giorni</em>.`, `Ferma qui da<br><em>${since} giorni</em>.`]) });
-    else if (since === null) c.push({ p:40, reason: pick(['Mai aperta', 'Inedita per te']), phrase: pick(['Aspetta solo<br>un tuo sguardo.', 'Ferma qui,<br>in silenzio.']) });
-  }
-  if (photoDate && !yearsAgo) {
-    const diff = Math.floor((today - photoDate) / 86400000);
-    if (diff >= 365) { const y = Math.floor(diff / 365); const extra = diff - y * 365 > 45; const t = (extra ? 'più di ' : '') + (y === 1 ? 'un anno fa' : `${y} anni fa`); c.push({ p:35, reason: t, phrase: pick([`era <em>${t}</em>.`, `<em>${t}</em>,<br>vi ricordate?`, `un pezzo di<br><em>${t}</em>.`]) }); }
-    else if (diff >= 30) { const m = Math.floor(diff / 30); const t = m === 1 ? 'un mese fa' : `${m} mesi fa`; c.push({ p:30, reason: t, phrase: pick([`era <em>${t}</em>.`, `solo <em>${t}</em>:<br>vi ricordate?`]) }); }
-    else if (diff >= 1) { const t = diff === 1 ? 'ieri' : `${diff} giorni fa`; c.push({ p:25, reason: t, phrase: pick([`solo <em>${t}</em>.`, `era <em>${t}</em>.`]) }); }
-  }
-  if (g.caption && g.caption.trim().length > 0 && g.caption.trim().length < 80) {
-    c.push({ p:28, reason:'Le vostre parole', phrase:`<em>“${esc(g.caption.trim())}”</em>` });
-  }
-  if (g.title && g.title.trim()) {
-    const t = esc(g.title.trim());
-    c.push({ p:20, reason: pick(['Quel momento', 'Da rivedere']), phrase: pick([`<em>${t}</em>.`, `ti ricordi<br><em>${t}</em>?`]) });
-  }
-  c.push({ p:10, reason: pick(['Un ricordo', 'Solo voi']), phrase: pick(['un frammento<br>di <em>voi due</em>.', 'da rivedere<br><em>insieme</em>.', 'un piccolo<br><em>per sempre</em>.']) });
-
-  c.sort((a, b) => b.p - a.p);
-  const top = c[0];
-  const second = c.find(x => x.p < top.p);
-  return (second && rand() < 0.3) ? second : top;
+function photoText(g) {
+  const title = (g.title || '').trim();
+  const loc = (g.location || '').trim();
+  const date = g.date ? fmtDate(g.date, { day:'numeric', month:'long', year:'numeric' }) : '';
+  const head = title || loc || date || 'Un ricordo';
+  const meta = [date !== head ? date : '', loc !== head ? loc : ''].filter(Boolean).map(esc).join(' · ');
+  return { title: esc(head), caption: (g.caption || '').trim(), meta, when: photoWhen(g) };
 }
 
 function pickHeroMemories(max = 8) {
@@ -132,7 +107,7 @@ function renderRicordi() {
   });
 
   if (!all.length) {
-    return h + emptyState('📷', 'Ancora nessun ricordo', 'Aggiungete la prima foto: un viaggio, una cena, una giornata qualsiasi.',
+    return h + emptyState('camera', 'Ancora nessun ricordo', 'Aggiungete la prima foto: un viaggio, una cena, una giornata qualsiasi.',
       `<button class="btn btn-primary" onclick="openGalleryForm()">${icon('plus', 18)} Aggiungi un ricordo</button>`);
   }
 
@@ -171,7 +146,7 @@ function renderRicordi() {
 function mosaicTile(g, big) {
   const rx = Object.values(g.reactions || {}).reduce((n, a) => n + ((a && a.length) || 0), 0);
   return `<button class="tile-photo ${big ? 'big' : ''}" onclick="openPhoto('${jsq(g.id)}')">
-    ${g.img ? `<img src="${esc(cimg(g.img, big ? 900 : 450))}" alt="" loading="lazy" style="${g.heroFocus ? `object-position:${g.heroFocus.x}% ${g.heroFocus.y}%` : ''}">` : `<span class="tile-noimg">${esc(g.title || '🖼️')}</span>`}
+    ${g.img ? `<img src="${esc(cimg(g.img, big ? 900 : 450))}" alt="" loading="lazy" style="${g.heroFocus ? `object-position:${g.heroFocus.x}% ${g.heroFocus.y}%` : ''}">` : `<span class="tile-noimg">${g.title ? esc(g.title) : icon('photo', 28)}</span>`}
     ${big && g.title ? `<span class="tile-cap">${esc(g.title)}</span>` : ''}
     ${rx ? `<span class="tile-rx">${icon('heartFill', 12)}${rx}</span>` : ''}
   </button>`;
@@ -227,7 +202,7 @@ function openPhoto(id, opts = {}) {
     el.querySelector('.viewer-count').textContent = `${idx + 1} / ${list.length}`;
     el.querySelector('.viewer-img').innerHTML = fresh.img
       ? `<img src="${esc(cimg(fresh.img, 1800))}" alt="">`
-      : `<div class="viewer-noimg">🖼️</div>`;
+      : `<div class="viewer-noimg">${icon('photo', 56)}</div>`;
     el.querySelector('.prev').hidden = idx === 0;
     el.querySelector('.next').hidden = idx === list.length - 1;
     const meta = [fresh.date ? fmtDate(fresh.date, { day:'numeric', month:'long', year:'numeric' }) : '', fresh.location ? esc(fresh.location) : ''].filter(Boolean).join(' · ');
@@ -265,30 +240,37 @@ function openPhoto(id, opts = {}) {
 }
 
 function reactionsHtml(reactions = {}) {
-  return QUICK_REACTIONS.map(e => {
-    const users = (reactions && reactions[e]) || [];
+  const g = groupReactions(reactions);
+  return REACTIONS.map(r => {
+    const users = g[r.k] || [];
     const mine = users.includes(myRole);
     const who = users.map(u => PEOPLE[u] || u).join(' e ');
-    return `<button class="rx ${mine ? 'mine' : ''} ${users.length ? 'has' : ''}" data-emoji="${e}" title="${esc(who)}">${e}${users.length ? `<i>${users.length === 2 ? '2' : esc(initials(PEOPLE[users[0]]))}</i>` : ''}</button>`;
-  }).join('') + Object.keys(reactions || {}).filter(e => !QUICK_REACTIONS.includes(e) && (reactions[e] || []).length).map(e =>
-    `<button class="rx has ${(reactions[e] || []).includes(myRole) ? 'mine' : ''}" data-emoji="${esc(e)}">${esc(e)}<i>${reactions[e].length}</i></button>`).join('');
+    return `<button class="rx ${mine ? 'mine' : ''} ${users.length ? 'has' : ''}" data-emoji="${r.k}" aria-label="${r.label}" title="${esc(who || r.label)}">${icon(r.ic, 20, 'rx-ic rx-' + r.ic)}${users.length ? `<i>${users.length === 2 ? '2' : esc(initials(PEOPLE[users[0]]))}</i>` : ''}</button>`;
+  }).join('');
 }
 
+// Attiva/disattiva la mia reazione; spegnendola la tolgo anche dalle emoji "sorelle" della vecchia app
 function toggleReactionMap(reactions, emoji) {
+  const k = reactionKey(emoji);
   const r = { ...(reactions || {}) };
-  const users = r[emoji] || [];
-  if (users.includes(myRole)) { r[emoji] = users.filter(u => u !== myRole); if (!r[emoji].length) delete r[emoji]; }
-  else r[emoji] = [...users, myRole];
+  const keys = Object.keys(r).filter(e => reactionKey(e) === k);
+  const mine = keys.some(e => (r[e] || []).includes(myRole));
+  if (mine) {
+    keys.forEach(e => { r[e] = (r[e] || []).filter(u => u !== myRole); if (!r[e].length) delete r[e]; });
+  } else {
+    r[k] = [...(r[k] || []), myRole];
+  }
   return r;
 }
 
+const hasMyReaction = (reactions, emoji) => (groupReactions(reactions)[reactionKey(emoji)] || []).includes(myRole);
+
 async function toggleGalleryReaction(id, emoji) {
   const g = findPhoto(id); if (!g) return;
-  const wantOn = !((g.reactions || {})[emoji] || []).includes(myRole);
+  const wantOn = !hasMyReaction(g.reactions, emoji);
   await mutate('_gallery', list => list.map(x => {
     if (!sameId(x.id, id)) return x;
-    const has = ((x.reactions || {})[emoji] || []).includes(myRole);
-    return has === wantOn ? x : { ...x, reactions: toggleReactionMap(x.reactions, emoji) };
+    return hasMyReaction(x.reactions, emoji) === wantOn ? x : { ...x, reactions: toggleReactionMap(x.reactions, emoji) };
   }));
 }
 
@@ -370,9 +352,7 @@ function playStories(items) {
   const gallery = (data._gallery || []).filter(g => g.img);
   if (!gallery.length) { openGalleryForm(); return; }
   const list = (items && items.length ? items : pickHeroMemories()).filter(g => g.img);
-  const ctx = { today: todayStart(), locMap: buildLocMap(gallery) };
-  const hello = `${greeting().hello} ${esc(meName())}`;
-  const slides = list.map(g => ({ g, story: buildPhotoStory(g, ctx) }));
+  const slides = list.map(g => ({ g, t: photoText(g) }));
 
   const el = openFullLayer(`<div class="stories">
     <div class="story-bars">${slides.map(() => '<span><i></i></span>').join('')}<span><i></i></span></div>
@@ -381,17 +361,15 @@ function playStories(items) {
       <button class="icon-btn glass sm" data-act="close" aria-label="Chiudi">${icon('close', 18)}</button>
     </div>
     ${slides.map((s, i) => {
-      const g = s.g;
-      const meta = [g.date ? fmtDate(g.date, { day:'numeric', month:'long', year:'numeric' }) : '', g.location ? esc(g.location) : ''].filter(Boolean);
+      const g = s.g, t = s.t;
       return `<section class="story" data-i="${i}">
         <div class="story-photo"><img src="${esc(cimg(g.img, 1600))}" alt="" style="${g.heroFocus ? `object-position:${g.heroFocus.x}% ${g.heroFocus.y}%` : ''}"></div>
         <div class="story-shade"></div>
         <div class="story-text">
-          <span class="glass-chip">${s.story.reason}</span>
-          <div class="story-hello">${hello},</div>
-          <div class="story-phrase">${s.story.phrase}</div>
-          ${g.title ? `<div class="story-title">${esc(g.title)}</div>` : ''}
-          ${meta.length ? `<div class="story-meta">${meta.join(' · ')}</div>` : ''}
+          ${t.when ? `<span class="glass-chip">${icon('clock', 13)} ${t.when}</span>` : ''}
+          <div class="story-phrase">${t.title}</div>
+          ${t.caption ? `<div class="story-caption">${esc(t.caption)}</div>` : ''}
+          ${t.meta ? `<div class="story-meta">${t.meta}</div>` : ''}
         </div>
       </section>`;
     }).join('')}

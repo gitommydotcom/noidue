@@ -7,7 +7,7 @@ const PAGES = {
   ricordi:      () => renderRicordi(),
   bigliettini:  () => renderBigliettini(),
   insieme:      () => renderInsieme(),
-  gioca:        () => renderGioca(),
+  domande:      () => renderDomande(),
   calendario:   () => renderCalendario(),
   impostazioni: () => renderImpostazioni(),
 };
@@ -38,7 +38,8 @@ function go(page, opts = {}) {
 }
 
 function routeFromHash() {
-  const h = (location.hash || '').replace('#', '');
+  let h = (location.hash || '').replace('#', '');
+  if (h === 'gioca') h = 'domande';   // vecchi link
   go(PAGES[h] ? h : 'oggi', { force:true });
 }
 
@@ -53,7 +54,10 @@ function renderPage(page, force) {
     if (typeof PAGE_AFTER[page] === 'function') PAGE_AFTER[page](el);
   }
 }
-const PAGE_AFTER = {};
+const PAGE_AFTER = {
+  // le risposte appena svelate contano come viste
+  domande: el => { const u = el.querySelector('[data-unseen]'); if (u) setTimeout(() => qMarkSeen([u.dataset.qid]), 300); },
+};
 
 function onDataChanged(kind, first) {
   if (first) {
@@ -61,17 +65,19 @@ function onDataChanged(kind, first) {
     routeFromHash();
   } else if (dataLoaded) {
     renderPage(currentPage);
+    refreshQuestionSheets();
   }
   updateBadges();
 }
 
 function updateBadges() {
   const unread = unreadNotes().length;
-  const pending = gamesList.filter(g => g.status === 'pending' && g.createdBy !== myRole).length;
+  const forMe = questionsForMe().length;
+  const todayOpen = !forMe && !qMine(todayQuestion());   // la domanda di oggi aspetta: solo un puntino
   const b1 = document.querySelector('.tab[data-go="bigliettini"] .badge');
-  const b2 = document.querySelector('.tab[data-go="gioca"] .badge');
+  const b2 = document.querySelector('.tab[data-go="domande"] .badge');
   if (b1) { b1.textContent = unread || ''; b1.hidden = !unread; }
-  if (b2) { b2.textContent = pending || ''; b2.hidden = !pending; }
+  if (b2) { b2.textContent = forMe || ''; b2.hidden = !forMe && !todayOpen; b2.classList.toggle('dot', !forMe && todayOpen); }
 }
 
 function startApp() {
@@ -101,9 +107,9 @@ function pageHead({ eyebrow = '', title = '', actions = '', back = '' }) {
   </header>`;
 }
 
-function emptyState(emoji, title, text, action = '') {
+function emptyState(ic, title, text, action = '') {
   return `<div class="empty">
-    <div class="empty-emoji">${emoji}</div>
+    <div class="empty-ic">${icon(ic, 30)}</div>
     <h3>${title}</h3>
     ${text ? `<p>${text}</p>` : ''}
     ${action}
@@ -141,16 +147,16 @@ function runSearch(q, out) {
   const has = s => String(s || '').toLowerCase().includes(q);
   const rows = [];
   SECTION_KEYS.forEach(s => (data[s] || []).forEach(i => {
-    if (has(i.title) || has(i.note) || has(i.map) || itemCats(i).some(has)) {
+    if (has(i.title) || has(i.note) || has(i.map) || itemCats(i).some(c => has(catLabel(c)))) {
       rows.push(`<button class="result" onclick="openItem('${s}','${jsq(i.id)}')">
-        <span class="result-ic">${SECTIONS[s].icon}</span>
+        <span class="result-ic">${secIcon(s, 19)}</span>
         <span class="result-body"><b>${esc(i.title)}</b><small>${SECTIONS[s].label}${i.done ? ' · fatto' : ''}</small></span></button>`);
     }
   }));
   (data._gallery || []).forEach(g => {
     if (has(g.title) || has(g.caption) || has(g.location)) {
       rows.push(`<button class="result" onclick="openPhoto('${jsq(g.id)}')">
-        ${g.img ? `<img class="result-img" src="${esc(cimg(g.img, 120))}" alt="">` : `<span class="result-ic">🖼️</span>`}
+        ${g.img ? `<img class="result-img" src="${esc(cimg(g.img, 120))}" alt="">` : `<span class="result-ic">${icon('photo', 19)}</span>`}
         <span class="result-body"><b>${esc(g.title || 'Ricordo')}</b><small>Ricordi${g.date ? ' · ' + fmtDate(g.date) : ''}</small></span></button>`);
     }
   });
@@ -158,7 +164,7 @@ function runSearch(q, out) {
     if (!canSeeNote(n)) return;
     if (has(n.text)) {
       rows.push(`<button class="result" onclick="openNote('${jsq(n.id)}')">
-        <span class="result-ic">💌</span>
+        <span class="result-ic">${icon('mail', 19)}</span>
         <span class="result-body"><b>${esc(String(n.text).slice(0, 70))}</b><small>Bigliettino di ${esc(PEOPLE[n.from] || '')} · ${relTime(n.createdAt)}</small></span></button>`);
     }
   });

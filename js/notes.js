@@ -69,7 +69,7 @@ function renderBigliettini() {
     </div>
     ${board.length
       ? `<div class="board">${board.map(noteCardHtml).join('')}</div>`
-      : emptyState('💌', notesList.length ? 'Niente qui' : 'La bacheca è vuota', notesList.length ? '' : `Scrivete il primo bigliettino: un grazie, un “mi manchi”, un disegno, una canzone.`)}
+      : emptyState('mail', notesList.length ? 'Niente qui' : 'La bacheca è vuota', notesList.length ? '' : `Scrivete il primo bigliettino: un grazie, un “mi manchi”, un disegno, una canzone.`)}
   </section>`;
 
   h += `<button class="archive-link" onclick="openChatArchive()">${icon('chat', 18)} Archivio della vecchia chat ${icon('chevR', 16)}</button>`;
@@ -117,7 +117,7 @@ function noteStatus(n) {
 }
 
 function noteCardHtml(n) {
-  const rx = Object.entries(n.reactions || {}).filter(([, u]) => u && u.length).map(([e]) => e).join('');
+  const rx = Object.keys(groupReactions(n.reactions)).map(k => reactionIcon(k, 14)).join('');
   return `<article class="note-card kind-${esc(n.kind || 'text')}" style="${paperStyle(n)};--rot:${noteRot(n)}deg" onclick="openNote('${jsq(n.id)}')">
     <span class="tape"></span>
     ${noteContentHtml(n, false)}
@@ -331,10 +331,10 @@ async function openChatArchive() {
       const day = d ? d.toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) : '';
       const sep = day && day !== lastDay ? `<div class="archive-day">${cap(day)}</div>` : '';
       lastDay = day || lastDay;
-      const rx = Object.entries(m.reactions || {}).filter(([, u]) => u && u.length).map(([e]) => e).join(' ');
+      const rx = Object.keys(groupReactions(m.reactions)).map(k => reactionIcon(k, 13)).join('');
       return `${sep}<div class="bubble ${m.who === myRole ? 'me' : 'them'}">
         <div class="bubble-text">${linkify(m.text || '')}</div>
-        <div class="bubble-meta">${esc(PEOPLE[m.who] || '')}${d ? ' · ' + d.toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' }) : ''}${rx ? ' · ' + esc(rx) : ''}</div>
+        <div class="bubble-meta">${esc(PEOPLE[m.who] || '')}${d ? ' · ' + d.toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' }) : ''}${rx ? ` <span class="bubble-rx">${rx}</span>` : ''}</div>
       </div>`;
     }).join('');
     box.scrollTop = box.scrollHeight;

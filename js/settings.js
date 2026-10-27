@@ -20,7 +20,7 @@ function renderImpostazioni() {
     <h2 class="set-title">Voi due</h2>
     <div class="set-row static">
       <span class="set-ic">${icon('user', 20)}</span>
-      <span class="set-text"><b>Su questo telefono sei</b><small>Serve per i bigliettini e i giochi</small></span>
+      <span class="set-text"><b>Su questo telefono sei</b><small>Serve per i bigliettini e le domande</small></span>
     </div>
     <div class="seg full set-seg">
       <button class="${myRole === 'lui' ? 'on' : ''}" onclick="setMyRole('lui')">${esc(PEOPLE.lui)}</button>
@@ -34,7 +34,7 @@ function renderImpostazioni() {
     <h2 class="set-title">I vostri dati</h2>
     <div class="set-note">${icon('shield', 18)}<span>Ogni giorno, alla prima apertura, Noi Due salva da solo una copia completa dei vostri dati. Potete anche scaricarne una sul telefono.</span></div>
     ${row('restore', 'Copie automatiche', 'Vedi le copie salvate e ripristina', 'openBackupsSheet()')}
-    ${row('download', 'Scarica una copia', 'File con liste, ricordi, bigliettini, giochi e chat', 'exportBackup(this)')}
+    ${row('download', 'Scarica una copia', 'File con liste, ricordi, bigliettini, domande, sfide e chat', 'exportBackup(this)')}
   </section>`;
 
   h += `<section class="set-group">

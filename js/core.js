@@ -15,16 +15,18 @@ const firebaseConfig = {
 const CLOUD_NAME    = 'dywtbbbuq';
 const UPLOAD_PRESET = 'ml_default';
 
-/* Sezioni della lista "Insieme" — chiavi identiche al database, non rinominare */
+/* Sezioni della lista "Insieme" — chiavi identiche al database, non rinominare.
+   Le categorie restano scritte con l'emoji iniziale (sono salvate così nei dati):
+   catLabel() la toglie solo quando le mostriamo. */
 const SECTIONS = {
-  places:       { label:'Posti',        one:'posto',      icon:'📍', showMap:true,  showRating:true,  recurring:false, cats:['🏙️ Città','🌿 Natura','🎨 Museo & Cultura','🏖️ Mare & Spiaggia','⛰️ Montagna','🏘️ Borgo medievale','🌃 Vita notturna','🎡 Parco & Giardino','🏛️ Sito storico','🛤️ Sentiero & Trekking','🎭 Teatro & Spettacolo','🍷 Cantina & Degustazione','🌋 Paesaggio naturale'] },
-  trips:        { label:'Viaggi',       one:'viaggio',    icon:'✈️', showMap:true,  showRating:true,  recurring:false, cats:['🇮🇹 Italia','🇪🇺 Europa','🌍 Fuori Europa','🚗 Road trip','🚂 In treno','🏕️ Camping','🛥️ Crociera','✈️ Lungo raggio','🚲 In bici','🥾 Trekking','🌊 Mare & Isole','🏔️ Montagna & Neve','🏙️ City break','🎒 Zaino in spalla','🚐 Camper','💑 Romantico'] },
-  movies:       { label:'Film & Serie', one:'titolo',     icon:'🎬', showMap:false, showRating:true,  recurring:false, cats:['🎬 Film','📺 Serie TV','📽️ Documentario','🎭 Animazione','😂 Commedia','😱 Horror','💕 Romantico','🔍 Thriller & Giallo','🚀 Fantascienza','🧙 Fantasy','🥊 Azione','🎸 Musical','🕵️ Crime','🌍 Storico','🎞️ Classico','🇯🇵 Anime','🇰🇷 K-drama'] },
-  books:        { label:'Libri',        one:'libro',      icon:'📚', showMap:false, showRating:true,  recurring:false, cats:['📖 Romanzo','🔍 Giallo & Noir','💭 Saggio','🧪 Fantascienza','❤️ Romance','🎨 Graphic novel','📰 Biografia','🌍 Storico','🧘 Crescita personale','🧙 Fantasy','😂 Umorismo','🌿 Natura & Viaggi','🕵️ Thriller','🎭 Classico','💡 Filosofia'] },
-  restaurants:  { label:'Ristoranti',   one:'ristorante', icon:'🍽️', showMap:true,  showRating:true,  recurring:false, cats:['🍕 Italiano','🍣 Giapponese','🌮 Messicano','🥘 Etnico','🍔 Burger & Fast casual','🍷 Fine dining','🥂 Cocktail bar','☕ Caffè & Brunch','🍦 Gelateria','🥐 Pasticceria','🍜 Asiatico','🌿 Vegetariano','🍖 Grill & BBQ','🐟 Pesce'] },
-  projects:     { label:'Progetti',     one:'progetto',   icon:'🛠️', showMap:false, showRating:false, recurring:false, cats:['🏠 Casa & Arredo','🎨 Creativo','💻 Tech','🌿 Giardino','📚 Studio','💪 Sport','🍳 Cucina','✈️ Viaggio','🎉 Evento','💰 Finanza','🎭 Cultura','🐾 Animali','🤝 Volontariato','🌱 Sostenibilità'] },
-  dreams:       { label:'Sogni',        one:'sogno',      icon:'💭', showMap:false, showRating:false, recurring:false, cats:['✈️ Viaggio dei sogni','🏠 Casa ideale','💼 Carriera','❤️ Famiglia','🎨 Creatività','💪 Salute','📚 Cultura','💰 Libertà finanziaria','🌍 Impatto','🎉 Esperienze','🌟 Traguardi','🤝 Comunità','🎭 Avventure','🌿 Stile di vita'] },
-  anniversaries:{ label:'Date',         one:'data',       icon:'🎂', showMap:true,  showRating:false, recurring:true,  cats:['💑 Anniversario','🎂 Compleanno','🎉 Festa','⭐ Momento speciale','💒 Matrimonio','🥂 Ricorrenza','🌹 Primo appuntamento','💌 Primo bacio','🏠 Prima casa','✈️ Primo viaggio','🎓 Laurea','🌟 Giorno speciale','🕯️ Ricordo'] },
+  places:       { label:'Posti',        one:'posto',      icon:'pin', showMap:true,  showRating:true,  recurring:false, cats:['🏙️ Città','🌿 Natura','🎨 Museo & Cultura','🏖️ Mare & Spiaggia','⛰️ Montagna','🏘️ Borgo medievale','🌃 Vita notturna','🎡 Parco & Giardino','🏛️ Sito storico','🛤️ Sentiero & Trekking','🎭 Teatro & Spettacolo','🍷 Cantina & Degustazione','🌋 Paesaggio naturale'] },
+  trips:        { label:'Viaggi',       one:'viaggio',    icon:'plane', showMap:true,  showRating:true,  recurring:false, cats:['🇮🇹 Italia','🇪🇺 Europa','🌍 Fuori Europa','🚗 Road trip','🚂 In treno','🏕️ Camping','🛥️ Crociera','✈️ Lungo raggio','🚲 In bici','🥾 Trekking','🌊 Mare & Isole','🏔️ Montagna & Neve','🏙️ City break','🎒 Zaino in spalla','🚐 Camper','💑 Romantico'] },
+  movies:       { label:'Film & Serie', one:'titolo',     icon:'film', showMap:false, showRating:true,  recurring:false, cats:['🎬 Film','📺 Serie TV','📽️ Documentario','🎭 Animazione','😂 Commedia','😱 Horror','💕 Romantico','🔍 Thriller & Giallo','🚀 Fantascienza','🧙 Fantasy','🥊 Azione','🎸 Musical','🕵️ Crime','🌍 Storico','🎞️ Classico','🇯🇵 Anime','🇰🇷 K-drama'] },
+  books:        { label:'Libri',        one:'libro',      icon:'book', showMap:false, showRating:true,  recurring:false, cats:['📖 Romanzo','🔍 Giallo & Noir','💭 Saggio','🧪 Fantascienza','❤️ Romance','🎨 Graphic novel','📰 Biografia','🌍 Storico','🧘 Crescita personale','🧙 Fantasy','😂 Umorismo','🌿 Natura & Viaggi','🕵️ Thriller','🎭 Classico','💡 Filosofia'] },
+  restaurants:  { label:'Ristoranti',   one:'ristorante', icon:'utensils', showMap:true,  showRating:true,  recurring:false, cats:['🍕 Italiano','🍣 Giapponese','🌮 Messicano','🥘 Etnico','🍔 Burger & Fast casual','🍷 Fine dining','🥂 Cocktail bar','☕ Caffè & Brunch','🍦 Gelateria','🥐 Pasticceria','🍜 Asiatico','🌿 Vegetariano','🍖 Grill & BBQ','🐟 Pesce'] },
+  projects:     { label:'Progetti',     one:'progetto',   icon:'wrench', showMap:false, showRating:false, recurring:false, cats:['🏠 Casa & Arredo','🎨 Creativo','💻 Tech','🌿 Giardino','📚 Studio','💪 Sport','🍳 Cucina','✈️ Viaggio','🎉 Evento','💰 Finanza','🎭 Cultura','🐾 Animali','🤝 Volontariato','🌱 Sostenibilità'] },
+  dreams:       { label:'Sogni',        one:'sogno',      icon:'cloud', showMap:false, showRating:false, recurring:false, cats:['✈️ Viaggio dei sogni','🏠 Casa ideale','💼 Carriera','❤️ Famiglia','🎨 Creatività','💪 Salute','📚 Cultura','💰 Libertà finanziaria','🌍 Impatto','🎉 Esperienze','🌟 Traguardi','🤝 Comunità','🎭 Avventure','🌿 Stile di vita'] },
+  anniversaries:{ label:'Date',         one:'data',       icon:'cake', showMap:true,  showRating:false, recurring:true,  cats:['💑 Anniversario','🎂 Compleanno','🎉 Festa','⭐ Momento speciale','💒 Matrimonio','🥂 Ricorrenza','🌹 Primo appuntamento','💌 Primo bacio','🏠 Prima casa','✈️ Primo viaggio','🎓 Laurea','🌟 Giorno speciale','🕯️ Ricordo'] },
 };
 const SECTION_KEYS = Object.keys(SECTIONS);
 
@@ -38,7 +40,7 @@ let PEOPLE    = { lui:'Lui', lei:'Lei' };
 let data = { _gallery:[], _games:{ scores:{lui:0,lei:0} } };
 SECTION_KEYS.forEach(s => data[s] = []);
 
-let gamesList  = [];
+let questionsList = [];
 let notesList  = [];
 let dataLoaded = false;
 
@@ -64,6 +66,8 @@ const clone = v => (v === undefined ? v : JSON.parse(JSON.stringify(v)));
 function itemCats(i) {
   return Array.isArray(i.cats) && i.cats.length ? i.cats : (i.cat ? [i.cat] : []);
 }
+// "🍕 Italiano" → "Italiano" (solo per mostrarla: il valore salvato non cambia)
+function catLabel(c) { return String(c || '').replace(/^[^\p{L}\p{N}]+/u, '').trim() || String(c || ''); }
 
 function initials(name) { return (name || '?').trim().charAt(0).toUpperCase() || '?'; }
 
@@ -196,7 +200,61 @@ const ICONS = {
   trophy:   '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4"/>',
   clock:    '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
   image:    '<rect x="3" y="4" width="18" height="16" rx="3.5"/><circle cx="9" cy="9.8" r="1.8"/><path d="m4 18 5-5 4 4 2.5-2.5L20 19"/>',
+  // sezioni
+  plane:    '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
+  film:     '<rect x="3" y="3.5" width="18" height="17" rx="3"/><path d="M7.5 3.5v17M16.5 3.5v17M3 8h4.5M3 12h18M3 16h4.5M16.5 8H21M16.5 16H21"/>',
+  book:     '<path d="M2.5 4.5H8a4 4 0 0 1 4 4V20a3 3 0 0 0-3-3H2.5z"/><path d="M21.5 4.5H16a4 4 0 0 0-4 4V20a3 3 0 0 1 3-3h6.5z"/>',
+  utensils: '<path d="M4 3v6a2.5 2.5 0 0 0 2.5 2.5h1A2.5 2.5 0 0 0 10 9V3M7 3v18M20 15V3a4.5 4.5 0 0 0-4.5 4.5V13c0 1.1.9 2 2 2H20zm0 0v6"/>',
+  wrench:   '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9z"/>',
+  cloud:    '<path d="M17.5 19H8.5a6 6 0 1 1 5.6-8.2A4.5 4.5 0 1 1 17.5 19z"/>',
+  cake:     '<path d="M20 21v-7.5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2V21"/><path d="M4 16.5s.7-1 2-1 2.7 2 4 2 2.7-2 4-2 2.7 2 4 2 2-1 2-1"/><path d="M2.5 21h19M8 8.5v3M12 8.5v3M16 8.5v3"/><path d="M8 4.5c.5.6.5 1.3 0 2M12 4.5c.5.6.5 1.3 0 2M16 4.5c.5.6.5 1.3 0 2"/>',
+  // reazioni
+  flame:    '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3.3.3 1.7 1.6 2.8 2.5 2.8z"/>',
+  laugh:    '<circle cx="12" cy="12" r="9"/><path d="M7 13.2h10a5 5 0 0 1-10 0z"/><path d="M8 9.3c.6-.8 1.6-.8 2.2 0M13.8 9.3c.6-.8 1.6-.8 2.2 0"/>',
+  tear:     '<circle cx="12" cy="12" r="9"/><path d="M9 14.6c1.7 1.5 4.3 1.5 6 0"/><circle cx="9" cy="9.8" r=".9" fill="currentColor" stroke="none"/><circle cx="15" cy="9.8" r=".9" fill="currentColor" stroke="none"/><path d="M16.3 11.3c.7.9 1.1 1.6 1.1 2a1.1 1.1 0 0 1-2.2 0c0-.4.4-1.1 1.1-2z" fill="currentColor" stroke-width="1"/>',
+  // domande
+  ask:      '<path d="M4 5.5h16V16H9.5L4 20.5z"/><path d="M10.2 8.9a1.9 1.9 0 1 1 2.6 1.8c-.5.2-.8.6-.8 1.1v.4"/><circle cx="12" cy="14.1" r=".75" fill="currentColor" stroke="none"/>',
+  users:    '<circle cx="9" cy="8" r="3.4"/><path d="M2.8 20a6.2 6.2 0 0 1 12.4 0"/><path d="M16 4.8a3.4 3.4 0 0 1 0 6.4M18.5 14.4a6.2 6.2 0 0 1 2.7 5.6"/>',
+  swap:     '<path d="M8 4 4 8l4 4M4 8h12M16 12l4 4-4 4M20 16H8"/>',
+  shuffle:  '<path d="M3 17.5h1.6c1.3 0 2.5-.6 3.2-1.7l5.4-7.6c.7-1.1 2-1.7 3.2-1.7H21"/><path d="m18 3.5 3 3-3 3M3 6.5h2c1.4 0 2.6.7 3.3 1.8M21 17.5h-4.6c-1.3 0-2.5-.6-3.2-1.7l-.4-.6M18 14.5l3 3-3 3"/>',
+  archive:  '<rect x="3" y="4" width="18" height="4.5" rx="1.5"/><path d="M5 8.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19V8.5M10 12.5h4"/>',
+  eye:      '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
 };
+const secIcon = (s, size = 20) => icon(SECTIONS[s] ? SECTIONS[s].icon : 'sparkle', size);
+
+/* Reazioni: nel database restano le emoji (compatibili con la vecchia app),
+   nell'interfaccia si vedono icone. Le emoji "sorelle" contano come la stessa reazione. */
+const REACTIONS = [
+  { k:'❤️', ic:'heartFill', label:'Amore' },
+  { k:'😍', ic:'sparkle',   label:'Che bello' },
+  { k:'😂', ic:'laugh',     label:'Ahah' },
+  { k:'🥹', ic:'tear',      label:'Commosso' },
+  { k:'🔥', ic:'flame',     label:'Fuoco' },
+];
+const REACTION_ALIAS = {
+  '♥️':'❤️','💕':'❤️','💖':'❤️','💗':'❤️','💘':'❤️','💓':'❤️','💞':'❤️','💝':'❤️','😘':'❤️','😻':'❤️','💜':'❤️','🩷':'❤️','🧡':'❤️','💙':'❤️','💚':'❤️','🤍':'❤️','🖤':'❤️','💛':'❤️','👍':'❤️','🫶':'❤️','🥰':'😍','🤩':'😍','✨':'😍','😮':'😍','😲':'😍','🤯':'😍','👏':'😍','🙌':'😍','🤣':'😂','😆':'😂','😄':'😂','😁':'😂','😹':'😂','😢':'🥹','😭':'🥹','🥺':'🥹','😿':'🥹',
+};
+function reactionKey(e) {
+  if (REACTIONS.some(r => r.k === e)) return e;
+  const plain = String(e || '').replace(/\uFE0F/g, '');
+  const hit = REACTIONS.find(r => r.k.replace(/\uFE0F/g, '') === plain);
+  return hit ? hit.k : (REACTION_ALIAS[e] || REACTION_ALIAS[plain + '\uFE0F'] || REACTION_ALIAS[plain] || '❤️');
+}
+// { '❤️':['lui'], '💕':['lei'] } → { '❤️':['lui','lei'] }
+function groupReactions(reactions) {
+  const out = {};
+  Object.entries(reactions || {}).forEach(([e, users]) => {
+    if (!Array.isArray(users) || !users.length) return;
+    const k = reactionKey(e);
+    out[k] = [...new Set([...(out[k] || []), ...users])];
+  });
+  return out;
+}
+function reactionIcon(k, size = 18) {
+  const r = REACTIONS.find(x => x.k === reactionKey(k));
+  return icon(r ? r.ic : 'heartFill', size, 'rx-ic rx-' + (r ? r.ic : 'heartFill'));
+}
+
 function icon(name, size = 22, cls = '') {
   return `<svg class="ico ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ''}</svg>`;
 }

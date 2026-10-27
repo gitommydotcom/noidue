@@ -56,7 +56,7 @@ function renderInsieme() {
     <button class="chip ${insSection === 'all' ? 'on' : ''}" onclick="setInsSection('all')">Tutto</button>
     ${SECTION_KEYS.map(s => {
       const n = (data[s] || []).filter(i => !i.done || SECTIONS[s].recurring).length;
-      return `<button class="chip ${insSection === s ? 'on' : ''}" onclick="setInsSection('${s}')">${SECTIONS[s].icon} ${SECTIONS[s].label}${n ? ` <i>${n}</i>` : ''}</button>`;
+      return `<button class="chip ${insSection === s ? 'on' : ''}" onclick="setInsSection('${s}')">${secIcon(s, 15)} ${SECTIONS[s].label}${n ? ` <i>${n}</i>` : ''}</button>`;
     }).join('')}
   </div>`;
 
@@ -72,19 +72,19 @@ function renderInsieme() {
 
   if (usedCats.size > 1) {
     h += `<div class="chips scroll-x small">${[...usedCats].map(c =>
-      `<button class="chip sm ${insCat === c ? 'on' : ''}" onclick="setInsCat('${jsq(c)}')">${esc(c)}</button>`).join('')}</div>`;
+      `<button class="chip sm ${insCat === c ? 'on' : ''}" onclick="setInsCat('${jsq(c)}')">${esc(catLabel(c))}</button>`).join('')}</div>`;
   }
 
   if (!list.length) {
     if (!all.length) {
       const s = insSection === 'all' ? null : insSection;
-      h += emptyState(s ? SECTIONS[s].icon : '✨', s ? `Ancora nessun ${SECTIONS[s].one}` : 'La lista è vuota',
+      h += emptyState(s ? SECTIONS[s].icon : 'sparkle', s ? `Ancora nessun ${SECTIONS[s].one}` : 'La lista è vuota',
         'Aggiungete la prima cosa che vorreste fare insieme.',
         `<button class="btn btn-primary" onclick="openItemForm(${s ? `'${s}'` : 'null'})">${icon('plus', 18)} ${addLabel}</button>`);
     } else if (insTab === 'done') {
-      h += emptyState('🌱', 'Ancora niente di fatto', 'Quando completate qualcosa, toccate il cerchio sulla card: finisce qui.');
+      h += emptyState('check', 'Ancora niente di fatto', 'Quando completate qualcosa, toccate il cerchio sulla card: finisce qui.');
     } else {
-      h += emptyState('🎉', 'Tutto fatto!', 'Avete completato tutto. Tempo di nuove idee.');
+      h += emptyState('sparkle', 'Tutto fatto!', 'Avete completato tutto. Tempo di nuove idee.');
     }
   } else {
     h += `<div class="items-grid">${list.map(x => itemCardHtml(x.s, x.i, insSection === 'all')).join('')}</div>`;
@@ -105,13 +105,12 @@ function itemCardHtml(s, i, showSection) {
       dateHtml = `<span class="tag ${d !== null && d >= 0 && d <= 7 ? 'hot' : ''}">${fmtDate(i.date, { day:'numeric', month:'short' })}</span>`;
     }
   }
-  const emoji = (cats[0] || '').split(' ')[0] || sec.icon;
   return `<article class="item ${i.img ? 'has-img' : 'sec-' + s} ${i.done && !sec.recurring ? 'done' : ''}" onclick="openItem('${s}','${jsq(i.id)}')">
-    ${i.img ? `<img src="${esc(cimg(i.img, 600))}" alt="" loading="lazy" onerror="this.remove()">` : `<div class="item-emoji">${emoji}</div>`}
+    ${i.img ? `<img src="${esc(cimg(i.img, 600))}" alt="" loading="lazy" onerror="this.remove()">` : `<div class="item-ic">${icon(sec.icon, 30)}</div>`}
     <div class="item-shade"></div>
     ${!sec.recurring ? `<button class="item-check ${i.done ? 'on' : ''}" onclick="event.stopPropagation();toggleDone('${s}','${jsq(i.id)}')" aria-label="${i.done ? 'Segna da fare' : 'Segna fatto'}">${icon('check', 16)}</button>` : ''}
     <div class="item-body">
-      ${showSection ? `<span class="item-kicker">${sec.icon} ${sec.label}</span>` : (cats[0] ? `<span class="item-kicker">${esc(cats[0])}</span>` : '')}
+      ${showSection ? `<span class="item-kicker">${icon(sec.icon, 12)} ${sec.label}</span>` : (cats[0] ? `<span class="item-kicker">${esc(catLabel(cats[0]))}</span>` : '')}
       <h3 class="item-title">${esc(i.title)}</h3>
       <div class="item-meta">${dateHtml}${i.rating ? starsHtml(i.rating, 11) : ''}<span class="grow"></span>${whoChip(i.who)}</div>
     </div>
@@ -140,10 +139,10 @@ function openItem(s, id, opts = {}) {
   }
   const html = `<div class="detail">
     <div class="detail-media ${i.img ? '' : 'sec-' + s}">
-      ${i.img ? `<img src="${esc(cimg(i.img, 1200))}" alt="">` : `<span class="detail-emoji">${(cats[0] || '').split(' ')[0] || sec.icon}</span>`}
+      ${i.img ? `<img src="${esc(cimg(i.img, 1200))}" alt="">` : `<span class="detail-ic">${icon(sec.icon, 64)}</span>`}
     </div>
     <div class="detail-body">
-      <div class="eyebrow">${sec.icon} ${sec.label}${i.done && !sec.recurring ? ' · <span class="ok">fatto</span>' : ''}</div>
+      <div class="eyebrow">${icon(sec.icon, 13)} ${sec.label}${i.done && !sec.recurring ? ' · <span class="ok">fatto</span>' : ''}</div>
       <h2 class="display detail-title">${esc(i.title)}</h2>
       ${i.note ? `<p class="detail-note">${linkify(i.note)}</p>` : ''}
       <div class="detail-rows">
@@ -153,7 +152,7 @@ function openItem(s, id, opts = {}) {
         ${i.rating ? `<div class="drow">${icon('star', 18)}<span>${starsHtml(i.rating, 16)}</span></div>` : ''}
         ${i.who ? `<div class="drow">${whoChip(i.who)}<span>Proposto da ${esc(PEOPLE[i.who] || '')}</span></div>` : ''}
       </div>
-      ${cats.length ? `<div class="chips wrap">${cats.map(c => `<span class="chip sm static">${esc(c)}</span>`).join('')}</div>` : ''}
+      ${cats.length ? `<div class="chips wrap">${cats.map(c => `<span class="chip sm static">${esc(catLabel(c))}</span>`).join('')}</div>` : ''}
       <div class="row-actions">
         <button class="icon-btn" onclick="deleteItem('${s}','${jsq(i.id)}')" aria-label="Elimina">${icon('trash', 20)}</button>
         <button class="btn btn-ghost" onclick="openItemForm('${s}','${jsq(i.id)}',{replace:true})">${icon('edit', 18)} Modifica</button>
@@ -183,7 +182,7 @@ async function toggleDone(s, id, fromSheet) {
 function openRateSheet(s, id) {
   const i = findItem(s, id); if (!i) return;
   const el = openSheet(`<div class="rate">
-    <div class="eyebrow center">Fatto ✓</div>
+    <div class="eyebrow center">${icon('check', 13)} Fatto</div>
     <h3 class="display center rate-title">Com'è stato<br><em>${esc(i.title)}</em>?</h3>
     <div class="rate-stars">${[1, 2, 3, 4, 5].map(n => `<button data-n="${n}" aria-label="${n} stelle">${icon('starFill', 38)}</button>`).join('')}</div>
     <button class="link-btn center" onclick="closeTop()">Salta</button>
@@ -218,7 +217,7 @@ function openItemForm(s, id = null, opts = {}) {
   const html = `<form class="form" id="item-form" novalidate>
     <h3 class="sheet-title">${item ? 'Modifica' : (sec ? `Nuovo ${SECTIONS[sec].one}` : 'Aggiungi a Insieme')}</h3>
     ${!item ? `<div class="field"><span>Dove lo mettiamo?</span>
-      <div class="chips wrap" id="f-sec">${SECTION_KEYS.map(k => `<button type="button" class="chip ${k === sec ? 'on' : ''}" data-sec="${k}">${SECTIONS[k].icon} ${SECTIONS[k].label}</button>`).join('')}</div></div>` : ''}
+      <div class="chips wrap" id="f-sec">${SECTION_KEYS.map(k => `<button type="button" class="chip ${k === sec ? 'on' : ''}" data-sec="${k}">${secIcon(k, 15)} ${SECTIONS[k].label}</button>`).join('')}</div></div>` : ''}
     <label class="field"><span>Titolo</span><input class="input big" name="title" value="${esc(item?.title || '')}" placeholder="Es. Vedere l'aurora boreale" autocomplete="off"></label>
     <div class="field"><span>Foto</span>${photoFieldHtml('item', item?.img || '')}</div>
     <label class="field"><span>Note</span><textarea class="input" name="note" rows="3" placeholder="Perché vi va, dettagli, idee…">${esc(item?.note || '')}</textarea></label>
@@ -250,7 +249,7 @@ function openItemForm(s, id = null, opts = {}) {
     if (!sec) { form.querySelector('#f-cats-wrap').hidden = true; form.querySelector('#f-map-wrap').hidden = true; form.querySelector('#f-rate-wrap').hidden = true; return; }
     const S = SECTIONS[sec];
     form.querySelector('#f-cats-wrap').hidden = false;
-    catsEl.innerHTML = S.cats.map(c => `<button type="button" class="chip sm ${selCats.includes(c) ? 'on' : ''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('');
+    catsEl.innerHTML = S.cats.map(c => `<button type="button" class="chip sm ${selCats.includes(c) ? 'on' : ''}" data-cat="${esc(c)}">${esc(catLabel(c))}</button>`).join('');
     catsEl.querySelectorAll('[data-cat]').forEach(b => b.addEventListener('click', () => {
       const c = b.dataset.cat;
       selCats = selCats.includes(c) ? selCats.filter(x => x !== c) : [...selCats, c];

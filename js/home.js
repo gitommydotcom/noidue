@@ -65,8 +65,7 @@ function memoryOfTheDay() {
   const rnd = seededRandom(COUPLE_ID + todayKey());
   const pool = otd.length ? otd : gall;
   const g = pool[Math.floor(rnd() * pool.length)];
-  const story = buildPhotoStory(g, { today, locMap: buildLocMap(gall), rand: seededRandom(todayKey() + g.id), stable:true });
-  return { g, story };
+  return { g, t: photoText(g) };
 }
 
 function renderOggi() {
@@ -100,15 +99,8 @@ function renderOggi() {
     </article>`);
   }
 
-  // 2 — Sfide in attesa
-  const pend = gamesList.filter(g => g.status === 'pending' && g.createdBy !== myRole);
-  if (pend.length) {
-    parts.push(`<button class="row-card" onclick="go('gioca')">
-      <span class="row-ic">${icon('dice', 22)}</span>
-      <span class="row-text"><b>${pend.length === 1 ? `${esc(otherName())} ti ha lanciato una sfida` : `${pend.length} sfide ti aspettano`}</b><small>Tocca a te rispondere</small></span>
-      ${icon('chevR', 18, 'chev')}
-    </button>`);
-  }
+  // 2 — La domanda di oggi
+  parts.push(qHomeCard());
 
   // 3 — Ricordo del giorno
   const m = memoryOfTheDay();
@@ -120,11 +112,12 @@ function renderOggi() {
       <div class="motd-shade"></div>
       <div class="motd-top">
         <span class="glass-chip">Ricordo del giorno</span>
-        <span class="glass-chip soft">${m.story.reason}</span>
+        ${m.t.when ? `<span class="glass-chip soft">${m.t.when}</span>` : ''}
       </div>
       <div class="motd-bottom">
-        <div class="motd-phrase">${m.story.phrase}</div>
-        <div class="motd-meta">${esc(g.title || '')}${g.date ? ` · ${fmtDate(g.date)}` : ''}${g.location ? ` · ${esc(g.location)}` : ''}</div>
+        <div class="motd-phrase">${m.t.title}</div>
+        ${m.t.caption ? `<div class="motd-caption">${esc(m.t.caption)}</div>` : ''}
+        ${m.t.meta ? `<div class="motd-meta">${m.t.meta}</div>` : ''}
         <button class="btn btn-cream sm" onclick="event.stopPropagation();playStories()">${icon('play', 16)} Rivivi i vostri ricordi</button>
       </div>
     </article>`);
@@ -152,13 +145,13 @@ function renderOggi() {
         ${bg}<div class="next-shade"></div>
         <div class="next-d">${dBadge(first.days)}</div>
         <div class="next-body">
-          <span class="glass-chip">${itemCats(fi)[0] ? esc(itemCats(fi)[0]) : `${SECTIONS[fs].icon} ${SECTIONS[fs].label}`}</span>
+          <span class="glass-chip">${secIcon(fs, 14)} ${itemCats(fi)[0] ? esc(catLabel(itemCats(fi)[0])) : SECTIONS[fs].label}</span>
           <h3 class="next-title">${esc(fi.title)}</h3>
           <span class="next-date">${cap(nextD.toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' }))}${yrs ? ` · ${yrs} ${yrs === 1 ? 'anno' : 'anni'}` : ''}</span>
         </div>
       </article>
       ${up.slice(1, 4).map(e => `<button class="row-card" onclick="openItem('${e.s}','${jsq(e.i.id)}')">
-          <span class="row-ic emoji">${SECTIONS[e.s].icon}</span>
+          <span class="row-ic">${secIcon(e.s, 20)}</span>
           <span class="row-text"><b>${esc(e.i.title)}</b><small>${fmtDate(todayKey(nextOccurrenceDate(e.s, e.i)), { day:'numeric', month:'long' })}</small></span>
           <span class="d-pill">${dBadge(e.days)}</span>
         </button>`).join('')}
@@ -182,7 +175,7 @@ function renderOggi() {
   parts.push(`<section class="block">
     <div class="block-head"><h2 class="h2">Da fare insieme</h2><button class="link-btn" onclick="openInsieme('all')">Tutto ${icon('arrowR', 15)}</button></div>
     <div class="tiles">${tiles.map(t => `<button class="tile sec-${t.s}" onclick="openInsieme('${t.s}')">
-        <span class="tile-emoji">${SECTIONS[t.s].icon}</span>
+        <span class="tile-ic">${secIcon(t.s, 22)}</span>
         <span class="tile-num">${t.todo}</span>
         <span class="tile-label">${SECTIONS[t.s].label}</span>
       </button>`).join('')}</div>
@@ -227,10 +220,10 @@ function drawIdea(exclude) {
   const html = `<div class="idea">
     <div class="eyebrow center">Che ne dite di…</div>
     <article class="idea-card ${i.img ? 'has-img' : 'sec-' + s}">
-      ${i.img ? `<img src="${esc(cimg(i.img, 900))}" alt="">` : `<div class="idea-emoji">${SECTIONS[s].icon}</div>`}
+      ${i.img ? `<img src="${esc(cimg(i.img, 900))}" alt="">` : `<div class="idea-ic">${secIcon(s, 56)}</div>`}
       <div class="idea-shade"></div>
       <div class="idea-body">
-        <span class="glass-chip">${SECTIONS[s].icon} ${SECTIONS[s].label}</span>
+        <span class="glass-chip">${secIcon(s, 14)} ${SECTIONS[s].label}</span>
         <h3 class="display idea-title">${esc(i.title)}</h3>
         ${i.note ? `<p>${esc(i.note).slice(0, 160)}</p>` : ''}
       </div>

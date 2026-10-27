@@ -3,7 +3,7 @@
 
    Regole di sicurezza dei dati:
    • La struttura del database è la stessa della versione precedente
-     (couples/{id} con le liste + sottoraccolte messages/games).
+     (couples/{id} con le liste + sottoraccolte notes/questions; messages e games sono archivi).
      Si aggiungono solo: sottoraccolta "notes" (bigliettini) e "backups".
    • Ogni modifica scrive SOLO il campo toccato, dentro una transazione
      che parte dai dati più recenti sul server: nessuna modifica
@@ -24,7 +24,7 @@ const FV = firebase.firestore.FieldValue;
 
 const coupleRef = () => db.collection('couples').doc(COUPLE_ID);
 
-let mainUnsub = null, gamesUnsub = null, notesUnsub = null;
+let mainUnsub = null, questionsUnsub = null, notesUnsub = null;
 let joinRole = 'lei';
 let lastServerDoc = null;
 
@@ -253,7 +253,7 @@ async function logout() {
   COUPLE_ID = ''; dataLoaded = false;
   SECTION_KEYS.forEach(s => data[s] = []);
   data._gallery = []; data._games = { scores:{ lui:0, lei:0 } };
-  gamesList = []; notesList = [];
+  questionsList = []; notesList = [];
   await auth.signOut().catch(() => {});
   location.hash = '';
   location.reload();
@@ -263,8 +263,8 @@ async function logout() {
    ASCOLTO IN TEMPO REALE
 ═══════════════════════════════════════════════ */
 function stopListeners() {
-  [mainUnsub, gamesUnsub, notesUnsub].forEach(u => { if (u) u(); });
-  mainUnsub = gamesUnsub = notesUnsub = null;
+  [mainUnsub, questionsUnsub, notesUnsub].forEach(u => { if (u) u(); });
+  mainUnsub = questionsUnsub = notesUnsub = null;
 }
 
 function startListeners() {
@@ -291,25 +291,28 @@ function startListeners() {
     setSync('err');
   });
 
-  let prevGames = null;
-  gamesUnsub = coupleRef().collection('games').orderBy('createdAt', 'desc').limit(60)
+  // Domande: avvisa quando l'altro risponde o ne fa una nuova
+  let prevQ = null;
+  questionsUnsub = coupleRef().collection('questions').orderBy('day', 'desc').limit(200)
     .onSnapshot(snap => {
       const list = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-      if (prevGames) {
-        list.forEach(g => {
-          const prev = prevGames.find(p => p.id === g.id);
-          if (g.status === 'done' && g.answeredBy && g.answeredBy !== myRole && prev && prev.status === 'pending') {
-            toast(`${PEOPLE[g.answeredBy] || ''} ha risposto alla tua sfida ${g.correct ? '— e ha indovinato!' : '— e ha sbagliato!'}`, { onClick: () => go('gioca') });
-          }
-          if (!prev && g.createdBy !== myRole && g.status === 'pending') {
-            toast(`${PEOPLE[g.createdBy] || ''} ti ha lanciato una sfida`, { onClick: () => go('gioca') });
+      const other = otherRole(myRole);
+      if (prevQ && !snap.metadata.fromCache) {
+        list.forEach(q => {
+          const prev = prevQ.find(p => p.id === q.id);
+          const theirs = (q.answers || {})[other], had = prev && (prev.answers || {})[other];
+          if (!prev && !q.daily && q.by === other) {
+            toast(`${PEOPLE[other] || ''} ti ha fatto una domanda`, { onClick: () => go('domande') });
+          } else if (theirs && !had) {
+            const mine = (q.answers || {})[myRole];
+            toast(mine ? `${PEOPLE[other] || ''} ha risposto: scopri cosa` : `${PEOPLE[other] || ''} ha risposto · tocca a te`, { onClick: () => go('domande') });
           }
         });
       }
-      prevGames = list;
-      gamesList = list;
-      onDataChanged('games');
-    }, () => {});
+      if (!snap.metadata.fromCache) prevQ = list;
+      questionsList = list;
+      onDataChanged('questions');
+    }, err => console.error(err));
 
   let prevNotes = null;
   notesUnsub = coupleRef().collection('notes').orderBy('createdAt', 'desc').limit(300)
@@ -318,7 +321,7 @@ function startListeners() {
       if (prevNotes) {
         list.forEach(n => {
           if (n.from !== myRole && !prevNotes.some(p => p.id === n.id)) {
-            toast(`💌 ${PEOPLE[n.from] || ''} ti ha lasciato un bigliettino`, { onClick: () => go('bigliettini') });
+            toast(`${PEOPLE[n.from] || ''} ti ha lasciato un bigliettino`, { onClick: () => go('bigliettini') });
           }
         });
       }
@@ -379,15 +382,6 @@ async function mutate(field, fn, opts = {}) {
   }
   setSync('live');
   return true;
-}
-
-async function addScore(role) {
-  try {
-    data._games = data._games || { scores:{ lui:0, lei:0 } };
-    data._games.scores = data._games.scores || { lui:0, lei:0 };
-    data._games.scores[role] = (data._games.scores[role] || 0) + 1;
-    await coupleRef().update({ [`_games.scores.${role}`]: FV.increment(1) });
-  } catch (e) { console.error(e); }
 }
 
 async function saveNames(lui, lei) {
@@ -486,10 +480,11 @@ async function exportBackup(btn) {
   setBusy(btn, true, 'Preparo il file…');
   try {
     const main = await coupleRef().get();
-    const [messages, games, notes] = await Promise.all([
+    const [messages, games, notes, questions] = await Promise.all([
       fetchAll('messages', 'ts').catch(() => []),
       fetchAll('games', 'createdAt').catch(() => []),
       fetchAll('notes', 'createdAt').catch(() => []),
+      fetchAll('questions', 'day').catch(() => []),
     ]);
     const md = main.data() || {};
     const out = {
@@ -498,6 +493,7 @@ async function exportBackup(btn) {
       _chat: messages,
       _gamesList: games,
       _notes: notes,
+      _questions: questions,
     };
     const blob = new Blob([JSON.stringify(out, null, 2)], { type:'application/json' });
     const a = document.createElement('a');
